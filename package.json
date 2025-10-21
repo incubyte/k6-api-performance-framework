@@ -1,0 +1,33 @@
+{
+  "name": "k6-api-performance-framework",
+  "version": "1.0.0",
+  "description": "API Performance testing framework using k6",
+  "homepage": "https://github.com/incubyte/k6-api-performance-framework#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/incubyte/k6-api-performance-framework.git"
+  },
+  "license": "ISC",
+  "author": "Kavya Kakarla",
+  "main": "index.js",
+  "keywords": [],
+  "type": "module",
+  "scripts": {
+    "test": "k6 run",
+    "test:load": "k6 run -o json=./results/json/load-test.json -o web-dashboard=./results/html/load-test.html scenarios/load-test.js",
+    "test:smoke": "k6 run -o json=./results/json/smoke-test.json -o web-dashboard scenarios/smoke-test.js",
+    "test:soak": "k6 run -o json=./results/json/soak-test.json -o web-dashboard scenarios/soak-test.js",
+    "test:stress": "k6 run -o json=./results/json/stress-test.json -o web-dashboard scenarios/stress-test.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "check-format": "prettier --check ."
+  },
+  "devDependencies": {
+    "eslint": "^9.29.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-prettier": "^5.5.0",
+    "k6-html-reporter": "^1.0.5",
+    "prettier": "^3.5.3"
+  }
+}
