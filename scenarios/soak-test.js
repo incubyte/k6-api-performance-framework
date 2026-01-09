@@ -2,11 +2,11 @@ import userJourney from "../src/user-journeys/users-test.js";
 import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";
 
 export const options = {
-  ext: {
-    loadimpact: {
-      projectID: 1,
-      name: "Soak Test",
-    },
+  // k6 Cloud configuration (optional - only used when running with 'k6 cloud' command)
+  // Note: 'cloud' replaces the deprecated 'ext.loadimpact' option
+  cloud: {
+    projectID: 1,
+    name: "Soak Test",
   },
   report: {
     directory: "./results/html",

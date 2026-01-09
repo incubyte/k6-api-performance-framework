@@ -2,11 +2,11 @@ import userJourney from "../src/user-journeys/users-test.js";
 import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";
 
 export const options = {
-  ext: {
-    loadimpact: {
-      projectID: 1,
-      name: "Load Test",
-    },
+  // k6 Cloud configuration (optional - only used when running with 'k6 cloud' command)
+  // Note: 'cloud' replaces the deprecated 'ext.loadimpact' option
+  cloud: {
+    projectID: 1,
+    name: "Load Test",
   },
   report: {
     directory: "./results/html",
@@ -34,14 +34,7 @@ export const options = {
     http_req_failed: ["rate<0.1"], // Allow up to 10% errors due to rate limiting
     http_reqs: ["rate>10"], // Lower the request rate expectation
   },
-  summaryTrendStats: ["avg", "min", "med", "max", "p(90)", "p(95)", "p(99)"],
   systemTags: ["status", "method", "url", "name", "error", "check", "group"],
-  ext: {
-    loadimpact: {
-      projectID: 1,
-      name: "Load Test",
-    },
-  },
 };
 
 export default function () {
