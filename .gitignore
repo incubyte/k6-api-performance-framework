@@ -1,3 +1,8 @@
 summary.html
 node_modules/
 FRAMEWORK_ANALYSIS.md
+results/
+.serena/
+.DS_Store
+**/.DS_Store
+*.log
