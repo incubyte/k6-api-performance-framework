@@ -1,4 +1,4 @@
-import userJourney from "../src/user-journeys/users-test.js";
+import postsTest from "../src/user-journeys/posts-test.js";
 import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";
 
 export const options = {
@@ -14,7 +14,6 @@ export const options = {
   },
   summaryTrendStats: ["avg", "min", "med", "max", "p(90)", "p(95)", "p(99)"],
   summaryTimeUnit: "ms",
-  noColor: true,
   scenarios: {
     soak_test: {
       executor: "constant-vus",
@@ -30,7 +29,7 @@ export const options = {
 };
 
 export default function () {
-  userJourney();
+  postsTest();
 }
 
 export function handleSummary(data) {
