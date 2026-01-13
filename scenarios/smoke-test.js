@@ -1,5 +1,7 @@
 import postsTest from "../src/user-journeys/posts-test.js";
 import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";
+import { sleep } from "k6";
+import { randomIntBetween } from "https://jslib.k6.io/k6-utils/1.2.0/index.js";
 
 export const options = {
   // k6 Cloud configuration (optional - only used when running with 'k6 cloud' command)
@@ -7,10 +9,6 @@ export const options = {
   cloud: {
     projectID: 1,
     name: "Smoke Test",
-  },
-  report: {
-    directory: "./results/html",
-    fileName: "smoke-test-report",
   },
   summaryTrendStats: ["avg", "min", "med", "max", "p(90)", "p(95)", "p(99)"],
   summaryTimeUnit: "ms",
@@ -30,6 +28,7 @@ export const options = {
 
 export default function () {
   postsTest();
+  sleep(randomIntBetween(1, 3)); // Think time between iterations
 }
 
 export function handleSummary(data) {

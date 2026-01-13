@@ -8,15 +8,13 @@ export const options = {
     projectID: 1,
     name: "Stress Test",
   },
-  report: {
-    directory: "./results/html",
-    fileName: "stress-test-report",
-  },
   summaryTrendStats: ["avg", "min", "med", "max", "p(90)", "p(95)", "p(99)"],
   summaryTimeUnit: "ms",
   scenarios: {
     stress_test: {
       executor: "ramping-arrival-rate",
+      startRate: 0,
+      timeUnit: "1s",
       preAllocatedVUs: 50,
       maxVUs: 100,
       stages: [

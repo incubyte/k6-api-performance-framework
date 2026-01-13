@@ -8,10 +8,6 @@ export const options = {
         projectID: 1,
         name: "Quick Test",
     },
-    report: {
-        directory: "./results/html",
-        fileName: "quick-test-report",
-    },
     summaryTrendStats: ["avg", "min", "med", "max", "p(90)", "p(95)", "p(99)"],
     summaryTimeUnit: "ms",
     scenarios: {

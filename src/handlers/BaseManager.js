@@ -1,4 +1,3 @@
-import { sleep } from "k6";
 import * as config from "../../config.js";
 import * as utils from "../lib/utils.js";
 import * as requestUtils from "../lib/request-utils.js";
@@ -7,7 +6,6 @@ export class BaseManager {
   constructor(payloads) {
     this.payloads = payloads;
     this.buildHeaders = requestUtils.buildHeaders;
-    this.requestDelay = config.requestDelay || 1;
     this.baseApiHeaders = {
       "x-api-key": "reqres-free-v1",
       "Content-Type": "application/json",
@@ -38,7 +36,6 @@ export class BaseManager {
     });
 
     utils.logInfo(`Submitting ${label}`);
-    sleep(this.requestDelay);
 
     return requestUtils.performPost(
       endpoint,
@@ -56,7 +53,6 @@ export class BaseManager {
     });
 
     utils.logInfo(`Updating ${label}`);
-    sleep(this.requestDelay);
 
     return requestUtils.performPut(
       endpoint,
@@ -75,7 +71,6 @@ export class BaseManager {
     });
 
     utils.logInfo(`Deleting ${label}`);
-    sleep(this.requestDelay);
 
     return requestUtils.performDelete(
       endpoint,
