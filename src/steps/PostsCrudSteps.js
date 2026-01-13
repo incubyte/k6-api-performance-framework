@@ -88,8 +88,7 @@ export default class PostsCrudSteps extends BaseSteps {
                     "Patch post - status is 200": (r) => r.status === 200,
                     "Patch post - id matches": (r) => r.json().id === postId,
                     "Patch post - title updated": (r) => {
-                        const payload = JSON.parse(patchPayload);
-                        return payload.title ? r.json().title === payload.title : true;
+                        return patchPayload.title ? r.json().title === patchPayload.title : true;
                     },
                 });
                 return response;
