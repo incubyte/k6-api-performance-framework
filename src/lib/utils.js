@@ -13,9 +13,9 @@ export function logSuccess(message) {
   console.log(`✅ ${message}`);
 }
 
-export function logError(message, error = null) {
-  if (error) {
-    console.error(`❌ ${message}`, error);
+export function logError(message, errorData = null) {
+  if (errorData) {
+    console.error(`❌ ${message}`, errorData);
   } else {
     console.error(`❌ ${message}`);
   }

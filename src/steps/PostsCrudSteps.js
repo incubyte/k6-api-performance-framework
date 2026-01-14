@@ -11,10 +11,11 @@ export default class PostsCrudSteps extends BaseSteps {
         return group("Get All Posts", () => {
             const response = this.manager.getAllPosts();
             if (response) {
+                const data = response.json();
                 check(response, {
                     "Get all posts - status is 200": (r) => r.status === 200,
-                    "Get all posts - response is array": (r) => Array.isArray(r.json()),
-                    "Get all posts - has posts": (r) => r.json().length > 0,
+                    "Get all posts - response is array": () => Array.isArray(data),
+                    "Get all posts - has posts": () => data.length > 0,
                 });
                 return response;
             }
@@ -27,13 +28,13 @@ export default class PostsCrudSteps extends BaseSteps {
         return group(`Get Post ${postId}`, () => {
             const response = this.manager.getPost(postId);
             if (response) {
-                const post = response.json();
+                const data = response.json();
                 check(response, {
                     "Get post - status is 200": (r) => r.status === 200,
-                    "Get post - has id": (r) => r.json().id !== undefined,
-                    "Get post - has title": (r) => r.json().title !== undefined,
-                    "Get post - has body": (r) => r.json().body !== undefined,
-                    "Get post - has userId": (r) => r.json().userId !== undefined,
+                    "Get post - has id": () => data.id !== undefined,
+                    "Get post - has title": () => data.title !== undefined,
+                    "Get post - has body": () => data.body !== undefined,
+                    "Get post - has userId": () => data.userId !== undefined,
                 });
                 return response;
             }
@@ -46,13 +47,13 @@ export default class PostsCrudSteps extends BaseSteps {
         return group("Create Post", () => {
             const response = this.manager.createPost(payload);
             if (response) {
-                const post = response.json();
+                const data = response.json();
                 check(response, {
                     "Create post - status is 201": (r) => r.status === 201,
-                    "Create post - has id": (r) => r.json().id !== undefined,
-                    "Create post - has title": (r) => r.json().title !== undefined,
-                    "Create post - has body": (r) => r.json().body !== undefined,
-                    "Create post - has userId": (r) => r.json().userId !== undefined,
+                    "Create post - has id": () => data.id !== undefined,
+                    "Create post - has title": () => data.title !== undefined,
+                    "Create post - has body": () => data.body !== undefined,
+                    "Create post - has userId": () => data.userId !== undefined,
                 });
                 return response;
             }
@@ -65,12 +66,12 @@ export default class PostsCrudSteps extends BaseSteps {
         return group(`Update Post ${postId}`, () => {
             const response = this.manager.updatePost(postId, payload);
             if (response) {
-                const post = response.json();
+                const data = response.json();
                 check(response, {
                     "Update post - status is 200": (r) => r.status === 200,
-                    "Update post - id matches": (r) => r.json().id === postId,
-                    "Update post - has title": (r) => r.json().title !== undefined,
-                    "Update post - has body": (r) => r.json().body !== undefined,
+                    "Update post - id matches": () => data.id === postId,
+                    "Update post - has title": () => data.title !== undefined,
+                    "Update post - has body": () => data.body !== undefined,
                 });
                 return response;
             }
@@ -83,12 +84,12 @@ export default class PostsCrudSteps extends BaseSteps {
         return group(`Patch Post ${postId}`, () => {
             const response = this.manager.patchPost(postId, patchPayload);
             if (response) {
-                const post = response.json();
+                const data = response.json();
                 check(response, {
                     "Patch post - status is 200": (r) => r.status === 200,
-                    "Patch post - id matches": (r) => r.json().id === postId,
-                    "Patch post - title updated": (r) => {
-                        return patchPayload.title ? r.json().title === patchPayload.title : true;
+                    "Patch post - id matches": () => data.id === postId,
+                    "Patch post - title updated": () => {
+                        return patchPayload.title ? data.title === patchPayload.title : true;
                     },
                 });
                 return response;
@@ -116,10 +117,11 @@ export default class PostsCrudSteps extends BaseSteps {
         return group(`Get Comments for Post ${postId}`, () => {
             const response = this.manager.getPostComments(postId);
             if (response) {
+                const data = response.json();
                 check(response, {
                     "Get comments - status is 200": (r) => r.status === 200,
-                    "Get comments - response is array": (r) => Array.isArray(r.json()),
-                    "Get comments - has comments": (r) => r.json().length > 0,
+                    "Get comments - response is array": () => Array.isArray(data),
+                    "Get comments - has comments": () => data.length > 0,
                 });
                 return response;
             }
@@ -132,12 +134,12 @@ export default class PostsCrudSteps extends BaseSteps {
         return group(`Get Posts by User ${userId}`, () => {
             const response = this.manager.getPostsByUser(userId);
             if (response) {
+                const data = response.json();
                 check(response, {
                     "Get posts by user - status is 200": (r) => r.status === 200,
-                    "Get posts by user - response is array": (r) => Array.isArray(r.json()),
-                    "Get posts by user - all posts belong to user": (r) => {
-                        const posts = r.json();
-                        return posts.every((post) => post.userId === userId);
+                    "Get posts by user - response is array": () => Array.isArray(data),
+                    "Get posts by user - all posts belong to user": () => {
+                        return data.every((post) => post.userId === userId);
                     },
                 });
                 return response;
