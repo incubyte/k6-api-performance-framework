@@ -1,15 +1,41 @@
 import { group, check } from "k6";
+import { endpoints } from "../../endpoints.js";
+import * as requestUtils from "../lib/request-utils.js";
 import { logError } from "../lib/utils.js";
-import { BaseSteps } from "./BaseSteps.js";
+import BaseOperations from "./BaseOperations.js";
 
-export default class PostsCrudSteps extends BaseSteps {
-    constructor(manager) {
-        super(manager);
+/**
+ * PostsOperations - Orchestrates Posts API operations
+ *
+ * This class demonstrates the standard pattern for implementing API operations.
+ * Use this as a reference when adding new resources (Users, Comments, etc.).
+ *
+ * Extends BaseOperations to inherit shared configuration (baseHeaders, etc.)
+ *
+ * @extends BaseOperations
+ * @see BaseOperations.js for extension documentation
+ */
+export default class PostsOperations extends BaseOperations {
+    constructor() {
+        super();
+        // Add any Posts-specific configuration here
+        // Example: this.postsConfig = { ... };
     }
 
     getAllPosts() {
         return group("Get All Posts", () => {
-            const response = this.manager.getAllPosts();
+            // Build and execute request
+            const url = endpoints.posts;
+            const headers = requestUtils.buildHeaders({ base: this.baseHeaders });
+            const response = requestUtils.performGet(
+                url,
+                headers,
+                {},
+                "Successfully retrieved Get All Posts",
+                "Get All Posts"
+            );
+
+            // Validate response
             if (response) {
                 const data = response.json();
                 check(response, {
@@ -26,7 +52,18 @@ export default class PostsCrudSteps extends BaseSteps {
 
     getPost(postId) {
         return group(`Get Post ${postId}`, () => {
-            const response = this.manager.getPost(postId);
+            // Build and execute request
+            const url = endpoints.post(postId);
+            const headers = requestUtils.buildHeaders({ base: this.baseHeaders });
+            const response = requestUtils.performGet(
+                url,
+                headers,
+                {},
+                `Successfully retrieved Get Post ${postId}`,
+                `Get Post ${postId}`
+            );
+
+            // Validate response
             if (response) {
                 const data = response.json();
                 check(response, {
@@ -45,7 +82,19 @@ export default class PostsCrudSteps extends BaseSteps {
 
     createPost(payload) {
         return group("Create Post", () => {
-            const response = this.manager.createPost(payload);
+            // Build and execute request
+            const url = endpoints.posts;
+            const headers = requestUtils.buildHeaders({ base: this.baseHeaders });
+            const response = requestUtils.performPost(
+                url,
+                payload,
+                headers,
+                {},
+                "Successfully submitted Create Post",
+                "Create Post"
+            );
+
+            // Validate response
             if (response) {
                 const data = response.json();
                 check(response, {
@@ -64,7 +113,19 @@ export default class PostsCrudSteps extends BaseSteps {
 
     updatePost(postId, payload) {
         return group(`Update Post ${postId}`, () => {
-            const response = this.manager.updatePost(postId, payload);
+            // Build and execute request
+            const url = endpoints.post(postId);
+            const headers = requestUtils.buildHeaders({ base: this.baseHeaders });
+            const response = requestUtils.performPut(
+                url,
+                payload,
+                headers,
+                {},
+                `Successfully updated Update Post ${postId}`,
+                `Update Post ${postId}`
+            );
+
+            // Validate response
             if (response) {
                 const data = response.json();
                 check(response, {
@@ -82,7 +143,19 @@ export default class PostsCrudSteps extends BaseSteps {
 
     patchPost(postId, patchPayload) {
         return group(`Patch Post ${postId}`, () => {
-            const response = this.manager.patchPost(postId, patchPayload);
+            // Build and execute request
+            const url = endpoints.post(postId);
+            const headers = requestUtils.buildHeaders({ base: this.baseHeaders });
+            const response = requestUtils.performPut(
+                url,
+                patchPayload,
+                headers,
+                {},
+                `Successfully updated Patch Post ${postId}`,
+                `Patch Post ${postId}`
+            );
+
+            // Validate response
             if (response) {
                 const data = response.json();
                 check(response, {
@@ -101,7 +174,18 @@ export default class PostsCrudSteps extends BaseSteps {
 
     deletePost(postId) {
         return group(`Delete Post ${postId}`, () => {
-            const response = this.manager.deletePost(postId);
+            // Build and execute request
+            const url = endpoints.post(postId);
+            const headers = requestUtils.buildHeaders({ base: this.baseHeaders });
+            const response = requestUtils.performDelete(
+                url,
+                headers,
+                {},
+                `Successfully deleted Delete Post ${postId}`,
+                `Delete Post ${postId}`
+            );
+
+            // Validate response
             if (response) {
                 check(response, {
                     "Delete post - status is 200": (r) => r.status === 200,
@@ -115,7 +199,18 @@ export default class PostsCrudSteps extends BaseSteps {
 
     getPostComments(postId) {
         return group(`Get Comments for Post ${postId}`, () => {
-            const response = this.manager.getPostComments(postId);
+            // Build and execute request
+            const url = endpoints.postComments(postId);
+            const headers = requestUtils.buildHeaders({ base: this.baseHeaders });
+            const response = requestUtils.performGet(
+                url,
+                headers,
+                {},
+                `Successfully retrieved Get Comments for Post ${postId}`,
+                `Get Comments for Post ${postId}`
+            );
+
+            // Validate response
             if (response) {
                 const data = response.json();
                 check(response, {
@@ -132,7 +227,18 @@ export default class PostsCrudSteps extends BaseSteps {
 
     getPostsByUser(userId) {
         return group(`Get Posts by User ${userId}`, () => {
-            const response = this.manager.getPostsByUser(userId);
+            // Build and execute request
+            const url = endpoints.postsFilter(userId);
+            const headers = requestUtils.buildHeaders({ base: this.baseHeaders });
+            const response = requestUtils.performGet(
+                url,
+                headers,
+                {},
+                `Successfully retrieved Get Posts by User ${userId}`,
+                `Get Posts by User ${userId}`
+            );
+
+            // Validate response
             if (response) {
                 const data = response.json();
                 check(response, {

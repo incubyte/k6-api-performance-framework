@@ -1,5 +1,4 @@
-import PostsCrudManager from "../handlers/PostsCrudManager.js";
-import PostsCrudSteps from "../steps/PostsCrudSteps.js";
+import PostsOperations from "../operations/PostsOperations.js";
 import {
     createPostPayload,
     updatePostPayload,
@@ -7,34 +6,33 @@ import {
 } from "../payloads/posts-payload.js";
 
 export default function postsTest() {
-    // Initialize manager
-    const manager = new PostsCrudManager();
-    const steps = new PostsCrudSteps(manager);
+    // Initialize operations
+    const operations = new PostsOperations();
 
     // Get all posts
-    const allPostsResponse = steps.getAllPosts();
+    const allPostsResponse = operations.getAllPosts();
 
     // Test with an existing post ID (JSONPlaceholder has posts 1-100)
     const existingPostId = 1;
 
     // Get an existing post
-    steps.getPost(existingPostId);
+    operations.getPost(existingPostId);
 
     // Update an existing post
-    steps.updatePost(existingPostId, updatePostPayload);
+    operations.updatePost(existingPostId, updatePostPayload);
 
     // Patch an existing post with partial update
-    steps.patchPost(existingPostId, patchPostPayload);
+    operations.patchPost(existingPostId, patchPostPayload);
 
     // Get comments for the post
-    steps.getPostComments(existingPostId);
+    operations.getPostComments(existingPostId);
 
     // Get posts by specific user
-    steps.getPostsByUser(1);
+    operations.getPostsByUser(1);
 
     // Create a new post (simulated - won't persist)
-    const createResponse = steps.createPost(createPostPayload);
+    const createResponse = operations.createPost(createPostPayload);
 
     // Delete an existing post (simulated - won't persist)
-    steps.deletePost(existingPostId);
+    operations.deletePost(existingPostId);
 }
