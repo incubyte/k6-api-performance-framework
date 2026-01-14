@@ -4,9 +4,8 @@ import { buildHeaders } from "../lib/request-utils.js";
 import { BaseManager } from "./BaseManager.js";
 
 export default class PostsCrudManager extends BaseManager {
-    constructor(payload) {
-        super(payload);
-        this.payload = payload;
+    constructor() {
+        super();
     }
 
     getAllPosts() {
@@ -21,16 +20,16 @@ export default class PostsCrudManager extends BaseManager {
         return this.performApiGet(url, label, 200);
     }
 
-    createPost() {
+    createPost(payload) {
         const url = endpoints.posts;
         const label = "Create Post";
-        return this.performApiPost(url, this.payload, label, 201);
+        return this.performApiPost(url, payload, label, 201);
     }
 
-    updatePost(id) {
+    updatePost(id, payload) {
         const url = endpoints.post(id);
         const label = `Update Post ${id}`;
-        return this.performApiPut(url, this.payload, label, 200);
+        return this.performApiPut(url, payload, label, 200);
     }
 
     patchPost(id, patchPayload) {

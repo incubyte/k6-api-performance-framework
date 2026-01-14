@@ -42,9 +42,9 @@ export default class PostsCrudSteps extends BaseSteps {
         });
     }
 
-    createPost() {
+    createPost(payload) {
         return group("Create Post", () => {
-            const response = this.manager.createPost();
+            const response = this.manager.createPost(payload);
             if (response) {
                 const post = response.json();
                 check(response, {
@@ -61,9 +61,9 @@ export default class PostsCrudSteps extends BaseSteps {
         });
     }
 
-    updatePost(postId) {
+    updatePost(postId, payload) {
         return group(`Update Post ${postId}`, () => {
-            const response = this.manager.updatePost(postId);
+            const response = this.manager.updatePost(postId, payload);
             if (response) {
                 const post = response.json();
                 check(response, {

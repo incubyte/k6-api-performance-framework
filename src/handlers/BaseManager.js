@@ -3,8 +3,7 @@ import * as utils from "../lib/utils.js";
 import * as requestUtils from "../lib/request-utils.js";
 
 export class BaseManager {
-  constructor(payloads) {
-    this.payloads = payloads;
+  constructor() {
     this.buildHeaders = requestUtils.buildHeaders;
     this.baseApiHeaders = {
       "x-api-key": "reqres-free-v1",

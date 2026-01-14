@@ -7,8 +7,8 @@ import {
 } from "../payloads/posts-payload.js";
 
 export default function postsTest() {
-    // Initialize manager with create payload
-    const manager = new PostsCrudManager(createPostPayload);
+    // Initialize manager
+    const manager = new PostsCrudManager();
     const steps = new PostsCrudSteps(manager);
 
     // Get all posts
@@ -21,8 +21,7 @@ export default function postsTest() {
     steps.getPost(existingPostId);
 
     // Update an existing post
-    manager.payload = updatePostPayload;
-    steps.updatePost(existingPostId);
+    steps.updatePost(existingPostId, updatePostPayload);
 
     // Patch an existing post with partial update
     steps.patchPost(existingPostId, patchPostPayload);
@@ -34,8 +33,7 @@ export default function postsTest() {
     steps.getPostsByUser(1);
 
     // Create a new post (simulated - won't persist)
-    manager.payload = createPostPayload;
-    const createResponse = steps.createPost();
+    const createResponse = steps.createPost(createPostPayload);
 
     // Delete an existing post (simulated - won't persist)
     steps.deletePost(existingPostId);
