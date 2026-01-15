@@ -1,88 +1,100 @@
 # K6 Performance Framework - Architecture Documentation
 
-**Last Updated**: January 14, 2026
-**Architecture Version**: 3.0 (Template-Ready)
-**Complexity Reduction**: 50% (6 layers → 3 layers)
-**Purpose**: Extensible template for k6 performance testing projects
+**Version**: 3.0
+**Purpose**: Extensible template for k6 API performance testing
+**Last Updated**: January 2026
 
 ---
 
 ## Overview
 
-This k6 performance testing framework follows a **simplified 3-layer architecture** designed for clarity, maintainability, and easy extensibility. The architecture was intentionally flattened from 6 layers to eliminate unnecessary abstractions and provide a clean template that others can clone and extend.
+This framework implements a clean **3-layer architecture** specifically designed for API performance testing with k6. The architecture prioritizes simplicity, extensibility, and educational value for teams building performance test suites.
 
-**Key Design Principle**: This is a **template repository**. The architecture prioritizes extensibility and educational value, demonstrating best practices for adding new API resources.
+### Design Philosophy
+
+- **Simplicity First**: Each layer has a single, clear responsibility
+- **Easy to Understand**: Minimal abstractions, straightforward patterns
+- **Easy to Extend**: Template-based approach for adding new resources
+- **Production-Ready**: Built-in observability and best practices
 
 ---
 
 ## Architecture Diagram
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                   LAYER 1: SCENARIOS                         │
-│              (smoke-test.js, load-test.js, etc.)             │
-│                                                               │
-│  Purpose: Test configuration & execution orchestration       │
-│  - k6 options (executors, VUs, duration, thresholds)        │
-│  - Think time between iterations                            │
-│  - HTML report generation (handleSummary)                   │
-└────────────────────┬────────────────────────────────────────┘
-                     │ calls
-                     ▼
-┌─────────────────────────────────────────────────────────────┐
-│                LAYER 2: USER JOURNEYS                        │
-│                 (posts-test.js)                              │
-│                                                               │
-│  Purpose: Business workflow orchestration                    │
-│  - Initialize operations classes                            │
-│  - Define test flow sequence                                │
-│  - Orchestrate complete user scenarios                      │
-└────────────────────┬────────────────────────────────────────┘
-                     │ calls
-                     ▼
-┌─────────────────────────────────────────────────────────────┐
-│                  LAYER 3: OPERATIONS                         │
-│          (BaseOperations, PostsOperations)                   │
-│                                                               │
-│  Purpose: API operations (HTTP + validation)                 │
-│  - Build HTTP requests (URLs, headers, payloads)            │
-│  - Execute requests via requestUtils                        │
-│  - Wrap in k6 groups (for metrics)                          │
-│  - Validate with k6 check() (single source of truth)        │
-│  - Parse JSON responses (cached per request)                │
-└────────────────────┬────────────────────────────────────────┘
-                     │ uses
-                     ▼
-┌─────────────────────────────────────────────────────────────┐
-│                  HTTP UTILITIES                              │
-│           (request-utils.js, k6/http)                        │
-│                                                               │
-│  Purpose: Pure HTTP wrapper & k6 integration                 │
-│  - Stringify payloads for k6                                │
-│  - Execute http.get/post/put/delete                         │
-│  - Log request/response info                                │
-└─────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────┐
+│                    LAYER 1: SCENARIOS                     │
+│            (Test Configuration & Execution)               │
+│                                                            │
+│  • Configure test types (smoke, load, stress)             │
+│  • Set VUs, duration, and thresholds                      │
+│  • Generate HTML reports                                  │
+│  • Control think time between iterations                  │
+└──────────────────────┬────────────────────────────────────┘
+                       │ calls
+                       ▼
+┌───────────────────────────────────────────────────────────┐
+│                 LAYER 2: USER JOURNEYS                    │
+│            (Business Workflow Orchestration)              │
+│                                                            │
+│  • Define complete user workflows                         │
+│  • Initialize operation classes                           │
+│  • Sequence API calls logically                           │
+│  • Reusable across test types                             │
+└──────────────────────┬────────────────────────────────────┘
+                       │ calls
+                       ▼
+┌───────────────────────────────────────────────────────────┐
+│                   LAYER 3: OPERATIONS                     │
+│         (HTTP Requests + Validation + Metrics)            │
+│                                                            │
+│  • Build and execute HTTP requests                        │
+│  • Validate responses with k6 check()                     │
+│  • Track custom business metrics                          │
+│  • Single source of truth for API interactions            │
+└───────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Layer Responsibilities
+## Layer 1: Scenarios
 
-### Layer 1: Scenarios
+### Purpose
 
-**Files**: `scenarios/*.js`
+Scenarios define **what type of load** you want to apply and **how long** it should run.
 
-**What It Does**:
+### Location
 
-- Defines test types (smoke, load, stress, soak, spike)
-- Configures k6 executors (constant-vus, ramping-vus, etc.)
-- Sets thresholds and performance goals
-- Adds think time between iterations (realistic user behavior)
-- Generates HTML reports
+`scenarios/*.js` (quick-test.js, smoke-test.js, load-test.js, etc.)
 
-**Example**:
+### Responsibilities
+
+1. **Configure k6 executors**
+   - constant-vus: Fixed number of users
+   - ramping-vus: Gradually increase/decrease load
+   - per-vu-iterations: Each user runs N times
+
+2. **Set performance thresholds**
+   - Response time limits (p95, p99)
+   - Error rate thresholds
+   - Success rate requirements
+
+3. **Generate HTML reports**
+   - Automatically creates visual reports
+   - Summary statistics and graphs
+
+4. **Control test pacing**
+   - Think time between iterations
+   - Realistic user behavior simulation
+
+### Example
 
 ```javascript
+import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";
+import postsTest from "../src/user-journeys/posts-test.js";
+import { sleep } from "k6";
+import { randomIntBetween } from "https://jslib.k6.io/k6-utils/1.2.0/index.js";
+
 export const options = {
   scenarios: {
     smoke_test: {
@@ -92,273 +104,329 @@ export const options = {
     },
   },
   thresholds: {
-    http_req_duration: ["p(95)<500"],
+    http_req_duration: ["p(95)<500"], // 95% of requests under 500ms
+    http_req_failed: ["rate<0.01"],   // Less than 1% failures
+    checks: ["rate>0.95"],            // 95% of checks pass
   },
 };
 
 export default function () {
-  postsTest(); // Call user journey
+  postsTest(); // Execute user journey
   sleep(randomIntBetween(1, 3)); // Think time
+}
+
+export function handleSummary(data) {
+  return {
+    "results/html/smoketest.html": htmlReport(data),
+  };
 }
 ```
 
 ---
 
-### Layer 2: User Journeys
+## Layer 2: User Journeys
 
-**Files**: `src/user-journeys/*.js`
+### Purpose
 
-**What It Does**:
+User journeys orchestrate **complete business workflows** that represent real user behavior.
 
-- Orchestrates complete business workflows
-- Initializes operations classes
-- Defines the sequence of operations
-- Represents realistic user behavior patterns
+### Location
 
-**Example**:
+`src/user-journeys/*.js`
+
+### Responsibilities
+
+1. **Initialize operations classes**
+   - Create instances of operations (PostsOperations, UsersOperations)
+   - Set up any journey-specific configuration
+
+2. **Define workflow sequence**
+   - Order operations to match real user flows
+   - Example: Browse posts → View details → Create comment
+
+3. **Reusable across scenarios**
+   - Same journey works in smoke, load, and stress tests
+   - Consistent behavior across test types
+
+### Example
 
 ```javascript
 import PostsOperations from "../operations/PostsOperations.js";
-import { createPostPayload, updatePostPayload } from "../payloads/posts-payload.js";
+import { createPostPayload, updatePostPayload, patchPostPayload } from "../payloads/posts-payload.js";
 
 export default function postsTest() {
+  // Initialize operations
   const operations = new PostsOperations();
 
-  // Execute business workflow
-  operations.getAllPosts();
-  operations.getPost(1);
-  operations.updatePost(1, updatePostPayload);
-  operations.deletePost(1);
+  // Execute complete workflow
+  operations.getAllPosts();               // Browse all posts
+  operations.getPost(1);                  // View specific post
+  operations.getPostComments(1);          // Read comments
+  operations.createPost(createPostPayload); // Create new post
+  operations.updatePost(1, updatePostPayload); // Edit post
+  operations.deletePost(1);               // Delete post
 }
 ```
 
-**Why This Layer**:
+### Why This Layer Matters
 
-- Reusable across multiple scenario types
-- Clear separation between test config and business logic
-- Easy to create complex multi-step workflows
+- **Separation of Concerns**: Test config separate from business logic
+- **Reusability**: Use same journey in multiple test types
+- **Maintainability**: Update workflow in one place
+- **Readability**: Clear view of user behavior patterns
 
 ---
 
-### Layer 3: Operations
+## Layer 3: Operations
 
-**Files**: `src/operations/*.js`
+### Purpose
 
-**What It Does**:
+Operations handle **all API interactions**: building requests, executing them, validating responses, and tracking metrics.
 
-- **Single source of truth for validation**
-- Builds HTTP requests (URLs, headers, payloads)
-- Executes requests via requestUtils
-- Wraps operations in k6 `group()` for metric organization
-- Parses JSON responses once (cached for checks)
-- Executes business validation with `check()`
-- Returns responses or null on failure
+### Location
 
-**Structure**:
+`src/operations/*.js`
+
+### Structure
 
 ```
 src/operations/
-├── BaseOperations.js      # Base class with shared config
-└── PostsOperations.js     # Posts API operations (extends BaseOperations)
+├── BaseOperations.js      # Foundation class with shared config
+└── PostsOperations.js     # Posts API operations (example)
 ```
 
-**BaseOperations** (foundation class):
+### Responsibilities
+
+1. **Build HTTP requests**
+   - Construct URLs from endpoints
+   - Build headers (authentication, content-type)
+   - Prepare request payloads
+
+2. **Execute requests**
+   - Call HTTP methods via requestUtils
+   - Wrap in k6 groups for organized metrics
+   - Handle request errors
+
+3. **Validate responses**
+   - Use k6 check() for assertions
+   - Verify status codes
+   - Validate response structure and data
+
+4. **Track metrics**
+   - Record operation duration
+   - Count successes/failures
+   - Track read vs write operations
+
+5. **Return responses**
+   - Return response object on success
+   - Return null on failure with error logging
+
+### BaseOperations Class
+
+The foundation class all operations extend:
 
 ```javascript
+import { config } from "../../config.js";
+
 export default class BaseOperations {
   constructor() {
-    // Shared API configuration
+    // Shared configuration for all operations
     this.baseHeaders = {
-      "x-api-key": "reqres-free-v1",
+      "x-api-key": config.apiKey,
       "Content-Type": "application/json",
     };
   }
+
+  // Add common helper methods here if needed by 3+ operation classes
 }
 ```
 
-**PostsOperations** (example implementation):
+**Why BaseOperations?**
+- Single place for shared configuration
+- Consistent pattern for all API resources
+- Easy authentication changes (update once, apply everywhere)
+- Clear template for extension
+
+### PostsOperations Class (Example)
 
 ```javascript
+import { group, check } from "k6";
+import { endpoints } from "../../endpoints.js";
+import * as requestUtils from "../lib/request-utils.js";
+import { logError } from "../lib/utils.js";
 import BaseOperations from "./BaseOperations.js";
+import {
+  getAllPostsDuration,
+  readOperations,
+  operationSuccess,
+} from "../metrics/business-metrics.js";
 
 export default class PostsOperations extends BaseOperations {
   constructor() {
-    super(); // Inherits baseHeaders
+    super(); // Inherit shared configuration
   }
 
-  getPost(postId) {
-    return group(`Get Post ${postId}`, () => {
-      // Build request
-      const url = endpoints.post(postId);
+  getAllPosts() {
+    return group("Get All Posts", () => {
+      // 1. Track start time for metrics
+      const startTime = Date.now();
+
+      // 2. Build request
+      const url = endpoints.posts;
       const headers = requestUtils.buildHeaders({ base: this.baseHeaders });
 
-      // Execute request
+      // 3. Execute request
       const response = requestUtils.performGet(
         url,
         headers,
         {},
-        `Successfully retrieved Get Post ${postId}`,
-        `Get Post ${postId}`,
+        "Successfully retrieved Get All Posts",
+        "Get All Posts"
       );
 
-      // Validate response
+      // 4. Record metrics
+      getAllPostsDuration.add(Date.now() - startTime);
+      readOperations.add(1);
+
+      // 5. Validate response
       if (response) {
-        const data = response.json(); // Parse ONCE
+        const data = response.json(); // Parse ONCE, reuse multiple times
         check(response, {
-          "Get post - status is 200": (r) => r.status === 200,
-          "Get post - has id": () => data.id !== undefined, // Use cached
-          "Get post - has title": () => data.title !== undefined,
+          "Get all posts - status is 200": (r) => r.status === 200,
+          "Get all posts - response is array": () => Array.isArray(data),
+          "Get all posts - has posts": () => data.length > 0,
         });
+
+        // 6. Record success
+        operationSuccess.add(response.status === 200);
         return response;
       }
-      logError(`Failed to get post ${postId}`);
+
+      // 7. Record failure
+      operationSuccess.add(false);
+      logError("Failed to get all posts");
       return null;
     });
   }
 }
 ```
 
-**Why This Layer**:
+### Key Patterns
 
-- Single responsibility: HTTP execution + validation
-- BaseOperations provides shared configuration
-- Easy to extend for new API resources
-- Template pattern for consistent implementations
-
----
-
-## Design Decisions & Rationale
-
-### 1. Why 3 Layers (Not 4, Not 6)?
-
-**Evolution**:
-
-- **Original (6 layers)**: BaseSteps, Steps, BaseManager, Manager, Utils, k6
-  - Problem: Multiple unnecessary abstractions
-  - Problem: 270+ lines of dead code
-  - Problem: Confusing handoffs
-
-- **Version 2.0 (4 layers)**: Scenarios, Journeys, Steps, Managers
-  - Better: Removed dead code
-  - Problem: Steps and Managers were artificially separated
-
-- **Version 3.0 (3 layers)**: Scenarios, Journeys, Operations
-  - Best: Merged Steps + Managers = Operations
-  - Benefit: Clear responsibilities, minimal complexity
-  - Benefit: Template pattern with BaseOperations
-
-**Why 3 is optimal**:
-
-- ✅ Clear separation of concerns
-- ✅ Each layer has distinct, valuable purpose
-- ✅ Minimal handoff overhead
-- ✅ Easy to extend (BaseOperations pattern)
-- ✅ Educational for template users
-
----
-
-### 2. Why BaseOperations?
-
-**Context**: This is a **template repository** that others will clone and extend.
-
-**Without BaseOperations**:
-
-- Users must figure out extension pattern themselves
-- Risk of inconsistent implementations
-- Duplication of shared configuration (API keys, headers)
-
-**With BaseOperations**:
-
-- ✅ Clear extension pattern demonstrated
-- ✅ Shared configuration in one place
-- ✅ Easy to add new resources (Users, Comments, etc.)
-- ✅ Shows best practices for reusable code
-- ✅ Educational value for template users
-
-**Example Extension**:
-
+**Pattern 1: Always Extend BaseOperations**
 ```javascript
-// Adding UsersOperations is straightforward
-import BaseOperations from "./BaseOperations.js";
-
 export default class UsersOperations extends BaseOperations {
   constructor() {
-    super(); // Inherits baseHeaders automatically
-  }
-
-  getAllUsers() {
-    // Follow same pattern as PostsOperations
+    super(); // Get shared config
   }
 }
 ```
 
----
-
-### 3. Why Merge Managers + Steps → Operations?
-
-**Previous Problem** (4 layers):
-
-```
-Steps → calls → Managers → calls → requestUtils
-```
-
-- Manager was thin wrapper (just URL + headers)
-- Manager only used by Steps (no other consumers)
-- Artificial separation with no real benefit
-
-**Solution** (3 layers):
-
-```
-Operations → calls → requestUtils
+**Pattern 2: Cache JSON Parsing**
+```javascript
+const data = response.json(); // Parse ONCE
+check(response, {
+  "has id": () => data.id !== undefined,     // Use cached data
+  "has name": () => data.name !== undefined, // Use cached data
+});
 ```
 
-- Operations does everything: build request + execute + validate
-- One class instead of two
-- Shorter stack traces
-- Clearer code flow
+**Pattern 3: Use k6 Groups**
+```javascript
+return group("Operation Name", () => {
+  // All operation code here
+  // k6 will organize metrics by group name
+});
+```
 
-**Benefits**:
-
-- 25% fewer layers (4 → 3)
-- One less directory to navigate
-- Eliminated artificial separation
-- Follows k6 best practice: always validate responses
+**Pattern 4: Track Custom Metrics**
+```javascript
+const startTime = Date.now();
+// ... execute operation ...
+myOperationDuration.add(Date.now() - startTime);
+operationSuccess.add(response.status === 200);
+```
 
 ---
 
-### 4. Why "Operations" Instead of "Steps"?
+## Data Flow Example
 
-**Naming Evolution**:
+Let's trace a complete request: `operations.getPost(1)`
 
-- ❌ `Steps`: Vague, doesn't convey actual responsibility
-- ✅ `Operations`: Clear - "API operations that build, execute, and validate requests"
+```
+┌─────────────────────────────────────────────────────────┐
+│ 1. SCENARIO (smoke-test.js)                            │
+│    • Calls postsTest()                                  │
+└────────────────────┬────────────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────┐
+│ 2. USER JOURNEY (posts-test.js)                        │
+│    • Creates new PostsOperations()                      │
+│    • Calls operations.getPost(1)                        │
+└────────────────────┬────────────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────┐
+│ 3. OPERATIONS (PostsOperations.js)                     │
+│    • Extends BaseOperations (gets baseHeaders)          │
+│    • Builds URL: endpoints.post(1)                      │
+│    • Builds headers with API key                        │
+│    • Wraps in group("Get Post 1")                       │
+│    • Tracks start time for metrics                      │
+│    • Calls requestUtils.performGet(...)                 │
+│    • Parses response.json() ONCE                        │
+│    • Runs k6 checks (validations)                       │
+│    • Records metrics (duration, success)                │
+│    • Returns response or null                           │
+└────────────────────┬────────────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────┐
+│ 4. HTTP UTILS (request-utils.js)                       │
+│    • Logs request info                                  │
+│    • Calls k6's http.get(url, {headers})                │
+│    • Logs success/failure                               │
+│    • Returns response                                   │
+└────────────────────┬────────────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────┐
+│ 5. K6 RUNTIME                                           │
+│    • Executes HTTP request                              │
+│    • Records all metrics                                │
+│    • Returns response object                            │
+└─────────────────────────────────────────────────────────┘
+```
 
-**What Operations Actually Does**:
-
-1. Builds HTTP requests
-2. Executes via requestUtils
-3. Groups with k6 `group()`
-4. Validates with k6 `check()`
-
-"Operations" accurately describes this orchestration.
+**Result**: 3 simple layers, clear responsibilities, easy to debug.
 
 ---
 
 ## Adding a New API Resource
 
-This framework is designed as a **template**. Here's the pattern for extending it:
+Let's add a Users API resource step by step.
 
-### Step 1: Add Endpoints (`endpoints.js`)
+### Step 1: Add Endpoints
+
+**File**: `endpoints.js`
 
 ```javascript
+const BASE_URL = __ENV.BASE_URL || "https://jsonplaceholder.typicode.com";
+
 export const endpoints = {
   posts: `${BASE_URL}/posts`,
-  users: `${BASE_URL}/users`, // NEW
-  user: (id) => `${BASE_URL}/users/${id}`, // NEW
+  post: (id) => `${BASE_URL}/posts/${id}`,
+
+  // ADD THESE LINES
+  users: `${BASE_URL}/users`,
+  user: (id) => `${BASE_URL}/users/${id}`,
 };
 ```
 
-### Step 2: Create Operations Class (`src/operations/UsersOperations.js`)
+### Step 2: Create Operations Class
+
+**File**: `src/operations/UsersOperations.js`
 
 ```javascript
 import { group, check } from "k6";
@@ -369,7 +437,7 @@ import BaseOperations from "./BaseOperations.js";
 
 export default class UsersOperations extends BaseOperations {
   constructor() {
-    super(); // Inherits baseHeaders
+    super(); // Inherit baseHeaders
   }
 
   getAllUsers() {
@@ -378,10 +446,16 @@ export default class UsersOperations extends BaseOperations {
       const url = endpoints.users;
       const headers = requestUtils.buildHeaders({ base: this.baseHeaders });
 
-      // Execute request
-      const response = requestUtils.performGet(url, headers, {}, "Successfully retrieved all users", "Get All Users");
+      // Execute
+      const response = requestUtils.performGet(
+        url,
+        headers,
+        {},
+        "Successfully retrieved all users",
+        "Get All Users"
+      );
 
-      // Validate response
+      // Validate
       if (response) {
         const data = response.json();
         check(response, {
@@ -391,274 +465,426 @@ export default class UsersOperations extends BaseOperations {
         });
         return response;
       }
+
       logError("Failed to get all users");
+      return null;
+    });
+  }
+
+  getUser(userId) {
+    return group(`Get User ${userId}`, () => {
+      const url = endpoints.user(userId);
+      const headers = requestUtils.buildHeaders({ base: this.baseHeaders });
+
+      const response = requestUtils.performGet(
+        url,
+        headers,
+        {},
+        `Successfully retrieved user ${userId}`,
+        `Get User ${userId}`
+      );
+
+      if (response) {
+        const data = response.json();
+        check(response, {
+          "Get user - status is 200": (r) => r.status === 200,
+          "Get user - has id": () => data.id !== undefined,
+          "Get user - has name": () => data.name !== undefined,
+          "Get user - has email": () => data.email !== undefined,
+        });
+        return response;
+      }
+
+      logError(`Failed to get user ${userId}`);
       return null;
     });
   }
 }
 ```
 
-### Step 3: Create User Journey (`src/user-journeys/users-test.js`)
+### Step 3: Create User Journey
+
+**File**: `src/user-journeys/users-test.js`
 
 ```javascript
 import UsersOperations from "../operations/UsersOperations.js";
 
 export default function usersTest() {
   const operations = new UsersOperations();
+
+  // Execute workflow
   operations.getAllUsers();
+  operations.getUser(1);
+  operations.getUser(2);
 }
 ```
 
 ### Step 4: Use in Scenario
 
+**File**: `scenarios/smoke-test.js` (modify existing)
+
 ```javascript
 import usersTest from "../src/user-journeys/users-test.js";
+import postsTest from "../src/user-journeys/posts-test.js";
 
 export default function () {
-  usersTest();
+  postsTest(); // Existing
+  usersTest(); // NEW
 }
 ```
 
-**Total Files Modified**: 4
-**Total Lines Added**: ~40-50
-**Complexity**: Low (straightforward pattern)
-**Reference**: Use `PostsOperations.js` as a template
+**Done!** You've added a complete new API resource in 4 simple steps.
 
 ---
 
-## Typical Execution Flow
+## Configuration Management
 
-Let's trace a single API call: `operations.getPost(1)`
+### Base Configuration
 
-```
-1. SCENARIO (smoke-test.js)
-   └─> Calls: postsTest()
+**File**: `config.js`
 
-2. USER JOURNEY (posts-test.js)
-   └─> Creates: new PostsOperations()
-   └─> Calls: operations.getPost(1)
-
-3. OPERATIONS (PostsOperations.js)
-   └─> Extends: BaseOperations (inherits baseHeaders)
-   └─> Builds: endpoint URL
-   └─> Builds: headers
-   └─> Wraps in: group("Get Post 1")
-   └─> Calls: requestUtils.performGet(...)
-   └─> Parses: response.json() ONCE
-   └─> Validates: check(response, { ... })
-   └─> Returns: response
-
-4. HTTP UTILS (request-utils.js)
-   └─> Logs: "Requesting Get Post 1"
-   └─> Calls: http.get(url, { headers })
-   └─> Logs: success/failure
-   └─> Returns: response
-
-5. K6 (native)
-   └─> Executes: HTTP request
-   └─> Records: metrics
-   └─> Returns: response object
+```javascript
+export const config = {
+  baseUrl: __ENV.BASE_URL || "https://jsonplaceholder.typicode.com",
+  apiKey: __ENV.API_KEY || "default-api-key",
+  timeout: parseInt(__ENV.TIMEOUT) || 30000,
+  thinkTimeMin: parseInt(__ENV.THINK_TIME_MIN) || 1,
+  thinkTimeMax: parseInt(__ENV.THINK_TIME_MAX) || 3,
+};
 ```
 
-**Total Handoffs**: 3 (down from 6 in original version)
-**Stack Trace Depth**: 3 files (down from 6)
-**Debugging Complexity**: LOW
+### Environment Variables
+
+Run tests with different configurations:
+
+```bash
+# Development
+k6 run -e BASE_URL=https://dev-api.example.com scenarios/smoke-test.js
+
+# Staging
+k6 run -e BASE_URL=https://staging-api.example.com scenarios/load-test.js
+
+# Production
+k6 run -e BASE_URL=https://api.example.com -e API_KEY=prod-key scenarios/stress-test.js
+```
+
+### Scenario Presets
+
+**File**: `src/config/scenario-base.js`
+
+Reusable executor configurations:
+
+```javascript
+export const executorPresets = {
+  // Quick validation
+  quick: (iterations = 1) => ({
+    executor: "per-vu-iterations",
+    vus: 1,
+    iterations: iterations,
+    maxDuration: "30s",
+  }),
+
+  // Smoke test
+  smoke: (vus = 1, duration = "1m") => ({
+    executor: "constant-vus",
+    vus,
+    duration,
+    gracefulStop: "10s",
+  }),
+
+  // Load test
+  load: (vus = 5, duration = "5m") => ({
+    executor: "constant-vus",
+    vus,
+    duration,
+    gracefulStop: "10s",
+  }),
+};
+```
 
 ---
 
-## Architecture Benefits
+## Custom Metrics
 
-### Before Simplification (6 Layers)
+### Why Custom Metrics?
 
-- ❌ BaseSteps.js: 47 lines, 0 references (dead code)
-- ❌ BaseManager.js: 83 lines, thin wrapper (no value)
-- ❌ utils.js: 174 lines, 11 unused functions
-- ❌ Double validation (requestUtils + Steps)
-- ❌ 6 files to trace per API call
-- ❌ ~270 lines of dead/redundant code
+k6 provides built-in HTTP metrics, but custom metrics let you track **business-level operations**:
 
-### After Simplification (3 Layers)
+- How long does "Get All Posts" take? (not just HTTP time)
+- How many read vs write operations?
+- What's the success rate of specific operations?
 
-- ✅ BaseOperations: Educational value, shared configuration
-- ✅ PostsOperations: Self-contained, extends BaseOperations
-- ✅ utils.js: 34 lines (80% reduction)
-- ✅ Single validation location (Operations layer)
-- ✅ 3 files to trace per API call
-- ✅ 270+ lines of dead code removed
-- ✅ 50% complexity reduction
+### Available Metrics
 
-### Template Repository Benefits
+**File**: `src/metrics/business-metrics.js`
 
-- ✅ Clear extension pattern (BaseOperations)
-- ✅ Easy to add new resources (copy PostsOperations)
-- ✅ Shared configuration management
-- ✅ Consistent implementations
-- ✅ Educational documentation
+```javascript
+import { Trend, Counter, Rate } from "k6/metrics";
+
+// Duration metrics (how long operations take)
+export const getAllPostsDuration = new Trend("get_all_posts_duration", true);
+export const getPostDuration = new Trend("get_post_duration", true);
+export const createPostDuration = new Trend("create_post_duration", true);
+export const updatePostDuration = new Trend("update_post_duration", true);
+export const deletePostDuration = new Trend("delete_post_duration", true);
+
+// Operation counters (how many operations)
+export const readOperations = new Counter("read_operations");
+export const writeOperations = new Counter("write_operations");
+
+// Success tracking (operation success rate)
+export const operationSuccess = new Rate("operation_success");
+```
+
+### Adding Metrics to Operations
+
+```javascript
+import {
+  myOperationDuration,
+  readOperations,
+  operationSuccess,
+} from "../metrics/business-metrics.js";
+
+myOperation() {
+  return group("My Operation", () => {
+    const startTime = Date.now();
+
+    const response = requestUtils.performGet(...);
+
+    // Record metrics
+    myOperationDuration.add(Date.now() - startTime);
+    readOperations.add(1);
+
+    if (response) {
+      operationSuccess.add(response.status === 200);
+      return response;
+    }
+
+    operationSuccess.add(false);
+    return null;
+  });
+}
+```
 
 ---
 
-## Performance Considerations
+## Authentication Patterns
 
-### JSON Parsing Optimization
+### API Key (Current)
 
-**Before**:
+```javascript
+this.baseHeaders = {
+  "x-api-key": config.apiKey,
+  "Content-Type": "application/json",
+};
+```
 
+### Bearer Token
+
+```javascript
+this.baseHeaders = {
+  "Authorization": `Bearer ${config.apiKey}`,
+  "Content-Type": "application/json",
+};
+```
+
+### Basic Auth
+
+```javascript
+import encoding from "k6/encoding";
+
+const credentials = encoding.b64encode(`${username}:${password}`);
+this.baseHeaders = {
+  "Authorization": `Basic ${credentials}`,
+  "Content-Type": "application/json",
+};
+```
+
+### OAuth 2.0 / Dynamic Token
+
+```javascript
+export default class MyOperations extends BaseOperations {
+  constructor() {
+    super();
+    this.authToken = null;
+  }
+
+  authenticate() {
+    const response = http.post(
+      `${config.baseUrl}/oauth/token`,
+      JSON.stringify({
+        client_id: __ENV.CLIENT_ID,
+        client_secret: __ENV.CLIENT_SECRET,
+        grant_type: "client_credentials",
+      })
+    );
+    this.authToken = response.json().access_token;
+  }
+
+  getHeaders() {
+    if (!this.authToken) {
+      this.authenticate();
+    }
+    return {
+      "Authorization": `Bearer ${this.authToken}`,
+      "Content-Type": "application/json",
+    };
+  }
+}
+```
+
+---
+
+## Best Practices
+
+### ✅ Do
+
+1. **Extend BaseOperations** for all new API resources
+2. **Cache JSON parsing** - Parse once, use many times
+3. **Use k6 groups** - Organize metrics by operation name
+4. **Track custom metrics** - Monitor business operations
+5. **Validate responses** - Always use k6 check()
+6. **Follow PostsOperations.js** - Use it as your template
+7. **Add think time** - In scenarios, not in operations
+
+### ❌ Don't
+
+1. **Don't parse JSON multiple times** - Expensive and wasteful
+2. **Don't add sleep() in operations** - Use scenario-level think time
+3. **Don't skip BaseOperations** - Breaks consistency
+4. **Don't duplicate validation** - Keep it in Operations layer
+5. **Don't ignore errors** - Log and track failures
+6. **Don't over-abstract** - Keep it simple
+
+---
+
+## Performance Optimizations
+
+### JSON Parsing Efficiency
+
+**Bad** (parses 3 times):
 ```javascript
 const post = response.json(); // Parse 1 (unused)
 check(response, {
-  "has id": (r) => r.json().id !== undefined, // Parse 2
+  "has id": (r) => r.json().id !== undefined,    // Parse 2
   "has title": (r) => r.json().title !== undefined, // Parse 3
 });
 ```
 
-**After**:
-
+**Good** (parses once):
 ```javascript
 const data = response.json(); // Parse ONCE
 check(response, {
-  "has id": () => data.id !== undefined, // Use cached
+  "has id": () => data.id !== undefined,    // Use cached
   "has title": () => data.title !== undefined, // Use cached
 });
 ```
 
-**Impact**: +1.34% measured throughput improvement
+**Impact**: +1.34% throughput improvement
 
-### Layer Reduction Impact
+### Request Optimization
 
-- Fewer function calls per request
-- Shorter stack traces (faster debugging)
-- Less memory overhead (no unused objects)
-- Clearer code flow (easier to optimize further)
-
----
-
-## Testing Strategy
-
-### Unit Testing (Per Layer)
-
-- **Operations**: Mock requestUtils, test validation logic
-- **Utils**: Test buildHeaders, payload stringification
-
-### Integration Testing (Current)
-
-- **Quick Test**: 1 iteration, all operations (validates flow)
-- **Smoke Test**: 1 VU, 1 minute (validates stability)
-- **Load Test**: Multiple VUs, sustained load (validates performance)
+- Use HTTP keep-alive (k6 default)
+- Batch related operations when possible
+- Avoid unnecessary think time in operations
+- Use appropriate VU counts (don't over-provision)
 
 ---
 
 ## Extension Guidelines
 
-### When to Extend BaseOperations
+### When to Add New Operations Class
 
-**Always extend** when creating new API resource operations:
+Create a new operations class for each **API resource or domain**:
 
-```javascript
-import BaseOperations from "./BaseOperations.js";
-
-export default class MyResourceOperations extends BaseOperations {
-  constructor() {
-    super(); // Inherits baseHeaders
-    // Add resource-specific config if needed
-  }
-}
-```
+- `PostsOperations` - All posts-related operations
+- `UsersOperations` - All users-related operations
+- `CommentsOperations` - All comments-related operations
+- `AuthOperations` - All authentication operations
 
 ### When to Add Helpers to BaseOperations
 
-**Only add helpers if**:
-
+Only add helpers that are:
 1. Used by 3+ operation classes
 2. Truly common across all resources
 3. Not resource-specific
 
-**Examples of good helpers**:
-
+**Good helpers**:
 - Authentication token management
 - Rate limiting logic
-- Common response parsing patterns
+- Common error handling patterns
 
-**Examples of bad helpers**:
-
-- Resource-specific validations (belongs in specific operations class)
-- Single-use utilities (keep in specific class)
-
----
-
-## Anti-Patterns to Avoid
-
-**❌ Don't**:
-
-- Skip extending BaseOperations (breaks consistency)
-- Parse JSON multiple times per request
-- Add validation in requestUtils (belongs in Operations)
-- Create abstractions without 3+ use cases
-- Add layers without clear value
-
-**✅ Do**:
-
-- Extend BaseOperations for all new resources
-- Cache JSON parsing results
-- Keep validation in Operations layer only
-- Follow PostsOperations.js as reference
-- Use k6 `group()` for all operations
+**Bad helpers**:
+- Resource-specific validations
+- Single-use utilities
 
 ---
 
-## Future Enhancements
+## Testing Strategy
 
-**Potential Additions** (if needed):
+### Quick Test (1 iteration)
+- **Purpose**: Validate all operations work
+- **When**: After code changes, before commit
+- **Duration**: ~3 seconds
 
-1. Custom metrics layer (`src/metrics/business-metrics.js`)
-2. Shared scenario configuration (`src/config/scenario-base.js`)
-3. Environment variable support (multi-env testing)
-4. Setup/teardown hooks (test data management)
-5. Additional helper methods in BaseOperations
+### Smoke Test (1 VU, 1 minute)
+- **Purpose**: Basic functionality check
+- **When**: Before deeper testing
+- **Duration**: 1 minute
 
-**Decision Criteria**:
+### Load Test (5 VUs, 5 minutes)
+- **Purpose**: Sustained normal load
+- **When**: Regular performance testing
+- **Duration**: 5 minutes
 
-- ❌ Don't add until you see 2-3 real use cases
-- ❌ Don't add layers "just in case"
-- ✅ Add when actual duplication appears
-- ✅ Add when clear value is demonstrated
+### Stress Test (ramp to 20 VUs)
+- **Purpose**: Find breaking point
+- **When**: Capacity planning
+- **Duration**: 10 minutes
+
+### Soak Test (3 VUs, 15 minutes)
+- **Purpose**: Long-duration stability
+- **When**: Check for memory leaks
+- **Duration**: 15 minutes
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+**Issue**: Tests not running
+**Solution**: Check k6 is installed: `k6 version`
+
+**Issue**: Import errors
+**Solution**: Verify paths are correct and files exist
+
+**Issue**: High failure rate
+**Solution**: Check API availability, network, thresholds
+
+**Issue**: Metrics not showing
+**Solution**: Ensure operations wrap code in k6 groups
 
 ---
 
 ## References
 
 - [k6 Documentation](https://k6.io/docs/)
-- [k6 Best Practices](https://k6.io/docs/using-k6/test-life-cycle/)
-- [YAGNI Principle](https://martinfowler.com/bliki/Yagni.html)
-- [Template Method Pattern](https://refactoring.guru/design-patterns/template-method)
+- [k6 Test Life Cycle](https://k6.io/docs/using-k6/test-life-cycle/)
+- [k6 Metrics](https://k6.io/docs/using-k6/metrics/)
+- [k6 Checks](https://k6.io/docs/using-k6/checks/)
+- [k6 Thresholds](https://k6.io/docs/using-k6/thresholds/)
 
 ---
 
-## Document Changelog
+## Framework Status
 
-### Version 3.0 (January 14, 2026)
-
-- **MAJOR**: Reduced from 4 layers → 3 layers
-- **MAJOR**: Merged handlers + steps → operations
-- **MAJOR**: Added BaseOperations for extensibility
-- **BREAKING**: Renamed src/steps/ → src/operations/
-- **BREAKING**: Deleted src/handlers/ directory
-- Updated all examples and documentation
-- Emphasized template repository nature
-
-### Version 2.0 (January 14, 2026)
-
-- Reduced from 6 layers → 4 layers
-- Removed BaseSteps and BaseManager abstractions
-- Removed 270+ lines of dead code
-- Consolidated validation to single layer
-
-### Version 1.0
-
-- Original 6-layer architecture
+**Version**: 3.0
+**Architecture**: 3-layer (Scenarios → User Journeys → Operations)
+**Status**: Production-ready
+**Score**: 4.5/5
+**Best For**: API performance testing with k6
 
 ---
 
-**Maintained By**: Development Team
-**Purpose**: Template repository for k6 performance testing
-**Questions?**: See README.md and BaseOperations.js for extension examples
-**Framework Score**: 4.5/5 - Production-ready with comprehensive features
+Built for teams who value simplicity, extensibility, and best practices.

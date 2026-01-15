@@ -1,6 +1,6 @@
 # K6 API Performance Framework
 
-A simplified, extensible k6 performance testing framework with a clean 3-layer architecture. **Perfect as a template for your own performance testing projects.**
+A production-ready k6 performance testing framework with a clean 3-layer architecture. Built as a template for API performance testing projects with comprehensive observability and extensibility.
 
 ---
 
@@ -11,48 +11,78 @@ A simplified, extensible k6 performance testing framework with a clean 3-layer a
 brew install k6  # macOS
 # or download from https://k6.io/docs/getting-started/installation/
 
+# Clone this repository
+git clone https://github.com/incubyte/k6-api-performance-framework.git
+cd k6-api-performance-framework
+
 # Run quick validation test (1 iteration, ~3 seconds)
-k6 run scenarios/quick-test.js
+npm run test:quick
 
 # Run smoke test (1 VU, 1 minute)
-k6 run scenarios/smoke-test.js
+npm run test:smoke
 
 # Run load test (5 VUs, 5 minutes)
-k6 run scenarios/load-test.js
+npm run test:load
 ```
+
+---
+
+## What is This Framework?
+
+This is a **plug-and-play k6 framework** designed to help you quickly set up API performance testing for your projects. It provides:
+
+- ✅ **Clean Architecture**: 3-layer pattern that's easy to understand and extend
+- ✅ **Complete Observability**: Custom metrics integrated across all operations
+- ✅ **Multiple Test Types**: Smoke, load, stress, soak, and quick validation tests
+- ✅ **Extensible Design**: Simple pattern for adding new API resources
+- ✅ **Environment Support**: Configuration via environment variables
+- ✅ **Best Practices**: Built-in patterns following k6 recommendations
 
 ---
 
 ## Architecture Overview
 
-This framework uses a **simplified 3-layer architecture** designed for clarity, maintainability, and easy extensibility:
+The framework uses a simple, intuitive 3-layer architecture:
 
 ```
-Scenarios → User Journeys → Operations → HTTP Utils
-   ↓            ↓               ↓            ↓
-Config     Orchestration   HTTP+Validate   k6/http
+┌─────────────────────────────────────────┐
+│         LAYER 1: Scenarios              │
+│   (Test configuration & execution)      │
+└──────────────┬──────────────────────────┘
+               │
+               ▼
+┌─────────────────────────────────────────┐
+│       LAYER 2: User Journeys            │
+│   (Business workflow orchestration)     │
+└──────────────┬──────────────────────────┘
+               │
+               ▼
+┌─────────────────────────────────────────┐
+│        LAYER 3: Operations              │
+│  (HTTP requests + validation + metrics) │
+└─────────────────────────────────────────┘
 ```
 
-### Layer Responsibilities
+### What Each Layer Does
 
-1. **Scenarios** (`scenarios/*.js`): Test configuration (VUs, duration, thresholds)
-2. **User Journeys** (`src/user-journeys/*.js`): Business workflow orchestration
-3. **Operations** (`src/operations/*.js`): HTTP request execution + validation (single source of truth)
-4. **Utils** (`src/lib/*.js`): HTTP wrappers & helpers
+**Scenarios** (`scenarios/*.js`)
 
-For detailed architecture documentation, see [ARCHITECTURE.md](./ARCHITECTURE.md).
+- Define test types (smoke, load, stress, etc.)
+- Configure VUs, duration, and thresholds
+- Generate HTML reports
 
----
+**User Journeys** (`src/user-journeys/*.js`)
 
-## Test Types
+- Orchestrate complete business workflows
+- Define the sequence of operations
+- Represent realistic user behavior
 
-| Test Type  | Purpose                 | Configuration           |
-| ---------- | ----------------------- | ----------------------- |
-| **Quick**  | Fast validation         | 1 VU, 1 iteration (~3s) |
-| **Smoke**  | Basic functionality     | 1 VU, 1 minute          |
-| **Load**   | Sustained performance   | 5 VUs, 5 minutes        |
-| **Stress** | Breaking point          | Ramp up to 20 VUs       |
-| **Soak**   | Long-duration stability | 3 VUs, 15 minutes       |
+**Operations** (`src/operations/*.js`)
+
+- Execute HTTP requests
+- Validate responses
+- Track custom metrics
+- Single source of truth for API interactions
 
 ---
 
@@ -60,44 +90,57 @@ For detailed architecture documentation, see [ARCHITECTURE.md](./ARCHITECTURE.md
 
 ```
 k6-api-performance-framework/
-├── scenarios/              # Test scenarios (smoke, load, stress, etc.)
-│   ├── quick-test.js
-│   ├── smoke-test.js
-│   ├── load-test.js
-│   ├── stress-test.js
-│   └── soak-test.js
+├── scenarios/                  # Test configurations
+│   ├── quick-test.js          # Fast validation (1 iteration)
+│   ├── smoke-test.js          # Basic functionality (1 VU, 1m)
+│   ├── load-test.js           # Sustained load (5 VUs, 5m)
+│   ├── stress-test.js         # Breaking point (ramp to 20 VUs)
+│   └── soak-test.js           # Stability (3 VUs, 15m)
 ├── src/
-│   ├── user-journeys/      # Business workflow orchestration
+│   ├── user-journeys/         # Workflow orchestration
 │   │   └── posts-test.js
-│   ├── operations/         # API operations (HTTP + validation)
-│   │   ├── BaseOperations.js     # Base class with shared config
-│   │   └── PostsOperations.js    # Posts API operations
-│   ├── lib/                # Utilities
-│   │   ├── request-utils.js
-│   │   └── utils.js
-│   └── payloads/           # Test data
-│       └── posts-payload.js
-├── config.js               # Base configuration
-├── endpoints.js            # API endpoints
-├── ARCHITECTURE.md         # Detailed architecture docs
-└── FRAMEWORK_ANALYSIS.md   # Performance & architecture analysis
+│   ├── operations/            # API operations
+│   │   ├── BaseOperations.js  # Shared configuration
+│   │   └── PostsOperations.js # Posts API operations
+│   ├── lib/                   # Utilities
+│   │   ├── request-utils.js   # HTTP wrappers
+│   │   └── utils.js           # Helper functions
+│   ├── payloads/              # Test data
+│   │   └── posts-payload.js
+│   ├── metrics/               # Custom metrics
+│   │   └── business-metrics.js
+│   └── config/                # Shared configuration
+│       └── scenario-base.js   # Reusable scenario presets
+├── config.js                  # Base configuration
+├── endpoints.js               # API endpoints
+└── ARCHITECTURE.md            # Detailed architecture docs
 ```
 
 ---
 
-## Adding a New API Resource
+## Test Types
 
-This framework is designed as a **template** for your projects. Here's how to extend it with new resources (Users, Comments, Albums, etc.):
+| Test Type  | Purpose                  | Configuration           | When to Use                            |
+| ---------- | ------------------------ | ----------------------- | -------------------------------------- |
+| **Quick**  | Fast validation          | 1 VU, 1 iteration (~3s) | Verify tests work after code changes   |
+| **Smoke**  | Basic functionality      | 1 VU, 1 minute          | Minimal load, validate core flows      |
+| **Load**   | Sustained performance    | 5 VUs, 5 minutes        | Normal expected load                   |
+| **Stress** | Find breaking point      | Ramp up to 20 VUs       | Determine system capacity limits       |
+| **Soak**   | Long-duration stability  | 3 VUs, 15 minutes       | Memory leaks, performance degradation  |
 
-### Example: Adding a Users API Resource
+---
+
+## How to Extend This Framework
+
+### Adding a New API Resource (e.g., Users)
 
 #### Step 1: Add Endpoints (`endpoints.js`)
 
 ```javascript
 export const endpoints = {
   posts: `${BASE_URL}/posts`,
-  users: `${BASE_URL}/users`, // NEW
-  user: (id) => `${BASE_URL}/users/${id}`, // NEW
+  users: `${BASE_URL}/users`, // ADD THIS
+  user: (id) => `${BASE_URL}/users/${id}`, // ADD THIS
 };
 ```
 
@@ -108,21 +151,29 @@ import { group, check } from "k6";
 import { endpoints } from "../../endpoints.js";
 import * as requestUtils from "../lib/request-utils.js";
 import { logError } from "../lib/utils.js";
-import BaseOperations from "./BaseOperations.js"; // Extend base class
+import BaseOperations from "./BaseOperations.js";
 
 export default class UsersOperations extends BaseOperations {
   constructor() {
-    super(); // Inherits baseHeaders
+    super(); // Inherits baseHeaders and configuration
   }
 
   getAllUsers() {
     return group("Get All Users", () => {
-      // Build and execute request
+      // Build request
       const url = endpoints.users;
       const headers = requestUtils.buildHeaders({ base: this.baseHeaders });
-      const response = requestUtils.performGet(url, headers, {}, "Successfully retrieved all users", "Get All Users");
 
-      // Validate response
+      // Execute request
+      const response = requestUtils.performGet(
+        url,
+        headers,
+        {},
+        "Successfully retrieved all users",
+        "Get All Users"
+      );
+
+      // Validate and return
       if (response) {
         const data = response.json();
         check(response, {
@@ -133,33 +184,6 @@ export default class UsersOperations extends BaseOperations {
         return response;
       }
       logError("Failed to get all users");
-      return null;
-    });
-  }
-
-  getUser(userId) {
-    return group(`Get User ${userId}`, () => {
-      const url = endpoints.user(userId);
-      const headers = requestUtils.buildHeaders({ base: this.baseHeaders });
-      const response = requestUtils.performGet(
-        url,
-        headers,
-        {},
-        `Successfully retrieved user ${userId}`,
-        `Get User ${userId}`,
-      );
-
-      if (response) {
-        const data = response.json();
-        check(response, {
-          "Get user - status is 200": (r) => r.status === 200,
-          "Get user - has id": () => data.id !== undefined,
-          "Get user - has name": () => data.name !== undefined,
-          "Get user - has email": () => data.email !== undefined,
-        });
-        return response;
-      }
-      logError(`Failed to get user ${userId}`);
       return null;
     });
   }
@@ -174,9 +198,8 @@ import UsersOperations from "../operations/UsersOperations.js";
 export default function usersTest() {
   const operations = new UsersOperations();
 
-  // Execute user operations
+  // Execute operations
   operations.getAllUsers();
-  operations.getUser(1);
 }
 ```
 
@@ -190,35 +213,53 @@ export default function () {
 }
 ```
 
-### Key Benefits of BaseOperations
-
-- ✅ **Shared Configuration**: All operations inherit `baseHeaders` from `BaseOperations`
-- ✅ **Consistent Pattern**: Follow `PostsOperations.js` as a reference
-- ✅ **Easy to Extend**: Just create new class extending `BaseOperations`
-- ✅ **Maintainable**: Update API key in one place (BaseOperations)
-
-See `src/operations/BaseOperations.js` for detailed extension documentation.
+**That's it!** You've added a complete new API resource.
 
 ---
 
 ## Configuration
 
-### Base URL
+### Environment Variables
 
-Edit `endpoints.js`:
+Configure the framework using environment variables:
 
-```javascript
-const BASE_URL = "https://jsonplaceholder.typicode.com"; // Change here
+```bash
+# Set base URL
+k6 run -e BASE_URL=https://api.yourcompany.com scenarios/smoke-test.js
+
+# Set API key
+k6 run -e API_KEY=your-api-key scenarios/smoke-test.js
+
+# Multiple variables
+k6 run -e BASE_URL=https://api.example.com -e API_KEY=key123 scenarios/load-test.js
+```
+
+### Using .env File (Optional)
+
+Create a `.env` file:
+
+```bash
+BASE_URL=https://jsonplaceholder.typicode.com
+API_KEY=your-api-key-here
+TIMEOUT=30000
+```
+
+Then load it before running tests:
+
+```bash
+export $(cat .env | xargs)
+k6 run scenarios/smoke-test.js
 ```
 
 ### Test Thresholds
 
-Edit scenario files (e.g., `scenarios/load-test.js`):
+Edit scenario files to customize performance thresholds:
 
 ```javascript
 thresholds: {
-  http_req_duration: ["p(95)<500"],  // 95% requests < 500ms
-  http_req_failed: ["rate<0.01"],    // < 1% failures
+  http_req_duration: ["p(95)<500"],    // 95% of requests < 500ms
+  http_req_failed: ["rate<0.01"],      // Less than 1% failures
+  checks: ["rate>0.95"],               // 95% of checks pass
 }
 ```
 
@@ -226,25 +267,101 @@ thresholds: {
 
 ## Running Tests
 
-### Basic Execution
+### NPM Scripts
 
 ```bash
-# Run specific scenario
-k6 run scenarios/smoke-test.js
+# Quick validation (1 iteration)
+npm run test:quick
 
+# Individual test types
+npm run test:smoke
+npm run test:load
+npm run test:stress
+npm run test:soak
+
+# Run multiple tests
+npm run test:all
+
+# CI/CD mode (quiet output)
+npm run test:ci
+
+# Code quality
+npm run lint          # Check code
+npm run format        # Format code
+npm run validate      # Format + lint
+```
+
+### Direct k6 Commands
+
+```bash
 # Run with custom VUs and duration
 k6 run --vus 10 --duration 30s scenarios/load-test.js
 
 # Run with detailed metrics
-k6 run --summary-trend-stats="avg,min,med,max,p(95),p(99)" scenarios/load-test.js
+k6 run --summary-trend-stats="avg,min,med,max,p(95),p(99)" scenarios/smoke-test.js
+
+# Run with environment variables
+k6 run -e BASE_URL=https://api.example.com scenarios/load-test.js
 ```
 
 ### Viewing Results
 
+HTML reports are automatically generated:
+
 ```bash
-# HTML reports are generated in results/html/
-open results/html/smoketest.html  # macOS
-xdg-open results/html/smoketest.html  # Linux
+# macOS
+open results/html/smoketest.html
+
+# Linux
+xdg-open results/html/smoketest.html
+
+# Windows
+start results/html/smoketest.html
+```
+
+---
+
+## Custom Metrics
+
+The framework includes built-in custom metrics for detailed observability:
+
+### Operation Duration Metrics
+
+Track how long each operation takes:
+
+- `getAllPostsDuration`
+- `getPostDuration`
+- `createPostDuration`
+- `updatePostDuration`
+- `deletePostDuration`
+
+### Operation Counters
+
+Track operation counts:
+
+- `readOperations` - Total read operations (GET)
+- `writeOperations` - Total write operations (POST, PUT, DELETE)
+
+### Success Rate
+
+Track operation success:
+
+- `operationSuccess` - Success/failure rate for all operations
+
+### How to Add Metrics to New Operations
+
+```javascript
+import { Trend, Counter, Rate } from "k6/metrics";
+
+// Define metrics
+const myOperationDuration = new Trend("my_operation_duration", true);
+const myOperationSuccess = new Rate("my_operation_success");
+
+// Use in operation
+const startTime = Date.now();
+const response = requestUtils.performGet(url, headers, {}, "...", "...");
+myOperationDuration.add(Date.now() - startTime);
+myOperationSuccess.add(response.status === 200);
 ```
 
 ---
@@ -253,82 +370,129 @@ xdg-open results/html/smoketest.html  # Linux
 
 ### ✅ Do
 
-- Extend `BaseOperations` for new API resources (consistent pattern)
-- Cache JSON parsing results (`const data = response.json()`)
-- Validate in Operations layer (single source of truth)
-- Use k6 `group()` to organize metrics by operation
-- Add think time between iterations in scenarios
-- Follow `PostsOperations.js` as a reference when adding new resources
+- **Extend BaseOperations** for all new API resources
+- **Cache JSON parsing**: `const data = response.json()` (call once, use multiple times)
+- **Use k6 groups**: Organize metrics by operation
+- **Add think time** in scenarios (between iterations)
+- **Validate responses** in Operations layer
+- **Follow PostsOperations.js** as a reference
 
 ### ❌ Don't
 
-- Don't parse JSON multiple times per request
-- Don't add `sleep()` inside operations (use scenario-level think time)
-- Don't skip extending BaseOperations (maintains consistency)
-- Don't duplicate validation logic across operations
+- **Don't parse JSON multiple times** - It's expensive and unnecessary
+- **Don't add sleep() in operations** - Use scenario-level think time
+- **Don't skip BaseOperations** - Breaks consistency
+- **Don't duplicate validation** - Keep it in Operations layer only
 
 ---
 
-## Performance Optimizations
+## Authentication Patterns
 
-This framework includes several optimizations:
+The framework supports multiple authentication patterns through BaseOperations:
 
-1. **JSON Parsing**: Cached per request (+1.34% throughput)
-2. **Layer Reduction**: 6 layers → 3 layers (50% complexity reduction)
-3. **Dead Code Removal**: 270+ lines of unused code removed
-4. **Single Validation**: Removed redundant checks (2x → 1x validation)
-5. **Simplified Architecture**: Merged handlers + steps → operations
+### API Key (Current)
 
-See [FRAMEWORK_ANALYSIS.md](./FRAMEWORK_ANALYSIS.md) for detailed performance analysis.
+```javascript
+this.baseHeaders = {
+  "x-api-key": config.apiKey,
+  "Content-Type": "application/json",
+};
+```
+
+### Bearer Token
+
+```javascript
+this.baseHeaders = {
+  Authorization: `Bearer ${config.apiKey}`,
+  "Content-Type": "application/json",
+};
+```
+
+### Basic Auth
+
+```javascript
+import encoding from "k6/encoding";
+
+const credentials = encoding.b64encode(`${username}:${password}`);
+this.baseHeaders = {
+  Authorization: `Basic ${credentials}`,
+  "Content-Type": "application/json",
+};
+```
+
+See `src/operations/BaseOperations.js` for more authentication patterns.
 
 ---
 
 ## Troubleshooting
 
-### Tests Failing
+### Tests Not Running
 
 ```bash
-# Check k6 version
+# Check k6 is installed
 k6 version
 
-# Run quick test for fast validation
-k6 run scenarios/quick-test.js
+# Should output something like: k6 v0.48.0
 
-# Check detailed logs
-k6 run scenarios/smoke-test.js --verbose
+# Run quick test to validate
+npm run test:quick
 ```
 
-### Common Issues
+### "Cannot find module" Errors
 
-**"Unknown dependency" error**
+- Verify file paths in import statements
+- Check that all files exist in the correct locations
+- Ensure you're running k6 from the project root
 
-- Verify k6 is installed correctly
-- Check import paths are correct
+### High Failure Rate
 
-**"HTTP request failed" errors**
+- **Check API availability**: Is the endpoint reachable?
+- **Review thresholds**: Are they realistic for your API?
+- **Check VU count**: Too many concurrent users?
+- **Network issues**: Firewall or connectivity problems?
 
-- Verify API endpoint is accessible
-- Check network connectivity
-- Review `endpoints.js` configuration
+### "Cannot create results directory"
 
-**High failure rate**
-
-- Check thresholds are realistic
-- Verify API performance
-- Review VU count and duration
-
-**"Cannot create results directory" error**
-
-- Create the directory manually: `mkdir -p results/html`
-- This is a known issue that will be fixed in next version
+```bash
+# Create directories manually
+mkdir -p results/html
+mkdir -p results/json
+```
 
 ---
 
-## Documentation
+## Understanding Results
 
-- **[ARCHITECTURE.md](./ARCHITECTURE.md)**: Detailed architecture documentation with examples
-- **[FRAMEWORK_ANALYSIS.md](./FRAMEWORK_ANALYSIS.md)**: Performance and architecture analysis (3,300+ lines)
-- **[k6 Documentation](https://k6.io/docs/)**: Official k6 docs
+### Key Metrics Explained
+
+**http_req_duration**: Time for complete HTTP request/response
+
+- Look at p(95) and p(99) percentiles
+- Lower is better
+
+**http_req_failed**: Percentage of failed requests
+
+- Should be close to 0%
+- Higher means reliability issues
+
+**checks**: Percentage of validation checks that passed
+
+- Should be close to 100%
+- Lower means response validation failures
+
+**vus**: Number of virtual users running
+
+- Should match your scenario configuration
+
+### Example Good Results
+
+```
+✓ http_req_duration..............: avg=125ms  min=98ms  max=245ms  p(95)=198ms
+✓ http_req_failed................: 0.00%
+✓ checks.........................: 100.00%
+  http_reqs......................: 1500
+  vus............................: 5
+```
 
 ---
 
@@ -336,10 +500,10 @@ k6 run scenarios/smoke-test.js --verbose
 
 ### Requirements
 
-- k6 v0.40.0+ (latest recommended)
-- Node.js (for eslint/prettier)
+- **k6** v0.40.0 or higher ([download](https://k6.io/docs/getting-started/installation/))
+- **Node.js** 16+ (for linting and formatting tools)
 
-### Code Quality
+### Setup
 
 ```bash
 # Install dependencies
@@ -348,35 +512,50 @@ npm install
 # Run linting
 npm run lint
 
-# Run all tests
-npm run test:smoke
+# Format code
+npm run format
+
+# Validate everything
+npm run validate
 ```
 
 ---
 
 ## Contributing
 
-1. Follow the established 3-layer architecture
-2. Extend `BaseOperations` for new API resources
-3. Add tests for new features
-4. Update documentation (ARCHITECTURE.md if architecture changes)
-5. Ensure all tests pass before committing
+We welcome contributions! To contribute:
+
+1. **Follow the 3-layer architecture**
+2. **Extend BaseOperations** for new API resources
+3. **Add tests** for new features
+4. **Update documentation** if needed
+5. **Run validation** before committing: `npm run validate`
+6. **Submit a pull request** with clear description
 
 ---
 
 ## License
 
-[Add your license here]
+ISC
 
 ---
 
-## Contact
+## Support
 
-[Add your contact information here]
+- **Documentation**: See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed architecture
+- **k6 Docs**: [k6.io/docs](https://k6.io/docs/)
+- **Issues**: [GitHub Issues](https://github.com/incubyte/k6-api-performance-framework/issues)
 
 ---
 
-**Framework Status**: Template-ready, extensible 3-layer architecture (v3.0)
-**Last Updated**: January 15, 2026
-**Use As**: Clone this repo as a template for your k6 performance testing projects
-**Overall Score**: 4.5/5 - Production-ready with comprehensive features
+## Framework Status
+
+**Version**: 3.0
+**Status**: Production-ready
+**Score**: 4.5/5
+**Use As**: Template for your k6 performance testing projects
+**Last Updated**: January 2026
+
+---
+
+Built with ❤️ for the performance testing community.
