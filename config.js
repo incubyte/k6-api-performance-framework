@@ -20,56 +20,56 @@
  */
 
 export const config = {
-    /**
-     * Base URL for API endpoints
-     * Override with: -e BASE_URL=https://your-api.com
-     */
-    baseUrl: __ENV.BASE_URL || "https://jsonplaceholder.typicode.com",
+  /**
+   * Base URL for API endpoints
+   * Override with: -e BASE_URL=https://your-api.com
+   */
+  baseUrl: __ENV.BASE_URL || "https://jsonplaceholder.typicode.com",
 
-    /**
-     * API Key for authentication
-     * Override with: -e API_KEY=your-api-key
-     */
-    apiKey: __ENV.API_KEY || "reqres-free-v1",
+  /**
+   * API Key for authentication
+   * Override with: -e API_KEY=your-api-key
+   */
+  apiKey: __ENV.API_KEY || "reqres-free-v1",
 
-    /**
-     * Request timeout (in seconds)
-     * Override with: -e TIMEOUT=60s
-     */
-    timeout: __ENV.TIMEOUT || "30s",
+  /**
+   * Request timeout (in seconds)
+   * Override with: -e TIMEOUT=60s
+   */
+  timeout: __ENV.TIMEOUT || "30s",
 
-    /**
-     * Environment name (dev/staging/prod)
-     * Override with: -e ENVIRONMENT=staging
-     */
-    environment: __ENV.ENVIRONMENT || "dev",
+  /**
+   * Environment name (dev/staging/prod)
+   * Override with: -e ENVIRONMENT=staging
+   */
+  environment: __ENV.ENVIRONMENT || "dev",
 
-    /**
-     * Debug mode flag
-     * Override with: -e DEBUG=true
-     */
-    debug: __ENV.DEBUG === "true" || false,
+  /**
+   * Debug mode flag
+   * Override with: -e DEBUG=true
+   */
+  debug: __ENV.DEBUG === "true" || false,
 
-    /**
-     * Think time range (for realistic user behavior simulation)
-     * Override with: -e THINK_TIME_MIN=1 -e THINK_TIME_MAX=5
-     */
-    thinkTime: {
-        min: parseInt(__ENV.THINK_TIME_MIN) || 1,
-        max: parseInt(__ENV.THINK_TIME_MAX) || 3,
-    },
+  /**
+   * Think time range (for realistic user behavior simulation)
+   * Override with: -e THINK_TIME_MIN=1 -e THINK_TIME_MAX=5
+   */
+  thinkTime: {
+    min: parseInt(__ENV.THINK_TIME_MIN) || 1,
+    max: parseInt(__ENV.THINK_TIME_MAX) || 3,
+  },
 };
 
 /**
  * Helper function to log current configuration (useful for debugging)
  */
 export function logConfig() {
-    console.log("=== K6 Framework Configuration ===");
-    console.log(`Environment: ${config.environment}`);
-    console.log(`Base URL: ${config.baseUrl}`);
-    console.log(`API Key: ${config.apiKey.substring(0, 8)}...`);
-    console.log(`Timeout: ${config.timeout}`);
-    console.log(`Debug Mode: ${config.debug}`);
-    console.log(`Think Time: ${config.thinkTime.min}-${config.thinkTime.max}s`);
-    console.log("===================================");
+  console.log("=== K6 Framework Configuration ===");
+  console.log(`Environment: ${config.environment}`);
+  console.log(`Base URL: ${config.baseUrl}`);
+  console.log(`API Key: ${config.apiKey.substring(0, 8)}...`);
+  console.log(`Timeout: ${config.timeout}`);
+  console.log(`Debug Mode: ${config.debug}`);
+  console.log(`Think Time: ${config.thinkTime.min}-${config.thinkTime.max}s`);
+  console.log("===================================");
 }

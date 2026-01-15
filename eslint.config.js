@@ -10,7 +10,12 @@ export default [
       ecmaVersion: "latest",
       sourceType: "module",
       globals: {
+        // k6 globals
+        __ENV: "readonly",
+        __VU: "readonly",
+        __ITER: "readonly",
         open: "readonly",
+        console: "readonly",
       },
     },
     rules: {

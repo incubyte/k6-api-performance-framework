@@ -15,15 +15,15 @@ import { config } from "./config.js";
 const BASE_URL = config.baseUrl;
 
 export const endpoints = {
-    // Posts endpoints
-    posts: `${BASE_URL}/posts`,
-    post: (id) => `${BASE_URL}/posts/${id}`,
-    postComments: (id) => `${BASE_URL}/posts/${id}/comments`,
-    postsFilter: (userId) => `${BASE_URL}/posts?userId=${userId}`,
+  // Posts endpoints
+  posts: `${BASE_URL}/posts`,
+  post: (id) => `${BASE_URL}/posts/${id}`,
+  postComments: (id) => `${BASE_URL}/posts/${id}/comments`,
+  postsFilter: (userId) => `${BASE_URL}/posts?userId=${userId}`,
 
-    // Example: Add more resource endpoints as needed
-    // users: `${BASE_URL}/users`,
-    // user: (id) => `${BASE_URL}/users/${id}`,
-    // comments: `${BASE_URL}/comments`,
-    // comment: (id) => `${BASE_URL}/comments/${id}`,
+  // Example: Add more resource endpoints as needed
+  // users: `${BASE_URL}/users`,
+  // user: (id) => `${BASE_URL}/users/${id}`,
+  // comments: `${BASE_URL}/comments`,
+  // comment: (id) => `${BASE_URL}/comments/${id}`,
 };

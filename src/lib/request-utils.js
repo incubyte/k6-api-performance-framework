@@ -14,9 +14,7 @@ export function performRequest(method, url, payload, headers, checks, successMsg
   } else {
     // k6 HTTP module behavior: stringify payload if it's an object
     const body = payload != null && typeof payload === "object" ? JSON.stringify(payload) : payload;
-    res = body != null && method !== "get"
-      ? http[method](url, body, { headers })
-      : http[method](url, { headers });
+    res = body != null && method !== "get" ? http[method](url, body, { headers }) : http[method](url, { headers });
   }
 
   // Log result (validation happens in Steps layer)

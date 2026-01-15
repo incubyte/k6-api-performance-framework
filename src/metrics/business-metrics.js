@@ -159,43 +159,43 @@ export const dataTransferred = new Counter("data_transferred_bytes");
  * );
  */
 export function trackOperation(durationMetric, operation, isRead = true) {
-    const startTime = Date.now();
+  const startTime = Date.now();
 
-    try {
-        const result = operation();
-        const duration = Date.now() - startTime;
+  try {
+    const result = operation();
+    const duration = Date.now() - startTime;
 
-        // Record duration
-        durationMetric.add(duration);
+    // Record duration
+    durationMetric.add(duration);
 
-        // Record success/failure
-        const success = result && result.status >= 200 && result.status < 300;
-        operationSuccess.add(success);
+    // Record success/failure
+    const success = result && result.status >= 200 && result.status < 300;
+    operationSuccess.add(success);
 
-        if (!success) {
-            operationFailures.add(1);
-        }
-
-        // Record operation type
-        if (isRead) {
-            readOperations.add(1);
-        } else {
-            writeOperations.add(1);
-        }
-
-        // Record data transfer (if response has body)
-        if (result && result.body) {
-            dataTransferred.add(result.body.length);
-        }
-
-        return result;
-    } catch (error) {
-        // Record failure
-        operationSuccess.add(false);
-        operationFailures.add(1);
-
-        throw error;
+    if (!success) {
+      operationFailures.add(1);
     }
+
+    // Record operation type
+    if (isRead) {
+      readOperations.add(1);
+    } else {
+      writeOperations.add(1);
+    }
+
+    // Record data transfer (if response has body)
+    if (result && result.body) {
+      dataTransferred.add(result.body.length);
+    }
+
+    return result;
+  } catch (error) {
+    // Record failure
+    operationSuccess.add(false);
+    operationFailures.add(1);
+
+    throw error;
+  }
 }
 
 /**
@@ -214,19 +214,19 @@ export function trackOperation(durationMetric, operation, isRead = true) {
  * };
  */
 export function getBusinessMetricThresholds() {
-    return {
-        // Operation duration thresholds (p95 targets)
-        get_all_posts_duration: ["p(95)<200"],
-        get_post_duration: ["p(95)<150"],
-        create_post_duration: ["p(95)<300"],
-        update_post_duration: ["p(95)<250"],
-        patch_post_duration: ["p(95)<200"],
-        delete_post_duration: ["p(95)<100"],
-        get_post_comments_duration: ["p(95)<250"],
-        get_posts_by_user_duration: ["p(95)<200"],
+  return {
+    // Operation duration thresholds (p95 targets)
+    get_all_posts_duration: ["p(95)<200"],
+    get_post_duration: ["p(95)<150"],
+    create_post_duration: ["p(95)<300"],
+    update_post_duration: ["p(95)<250"],
+    patch_post_duration: ["p(95)<200"],
+    delete_post_duration: ["p(95)<100"],
+    get_post_comments_duration: ["p(95)<250"],
+    get_posts_by_user_duration: ["p(95)<200"],
 
-        // Success rate thresholds
-        operation_success_rate: ["rate>0.99"], // 99% success rate
-        validation_failure_rate: ["rate==0"], // 0% validation failures
-    };
+    // Success rate thresholds
+    operation_success_rate: ["rate>0.99"], // 99% success rate
+    validation_failure_rate: ["rate==0"], // 0% validation failures
+  };
 }

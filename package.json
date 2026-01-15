@@ -13,15 +13,19 @@
   "keywords": [],
   "type": "module",
   "scripts": {
-    "test": "k6 run",
-    "test:load": "k6 run -o json=./results/json/load-test.json -o web-dashboard=./results/html/load-test.html scenarios/load-test.js",
-    "test:smoke": "k6 run -o json=./results/json/smoke-test.json -o web-dashboard scenarios/smoke-test.js",
-    "test:soak": "k6 run -o json=./results/json/soak-test.json -o web-dashboard scenarios/soak-test.js",
-    "test:stress": "k6 run -o json=./results/json/stress-test.json -o web-dashboard scenarios/stress-test.js",
+    "test": "echo 'Available tests: quick, smoke, load, stress, soak' && echo 'Run: npm run test:quick (or test:smoke, test:load, etc.)'",
+    "test:quick": "k6 run scenarios/quick-test.js",
+    "test:smoke": "k6 run scenarios/smoke-test.js",
+    "test:load": "k6 run scenarios/load-test.js",
+    "test:stress": "k6 run scenarios/stress-test.js",
+    "test:soak": "k6 run scenarios/soak-test.js",
+    "test:all": "npm run test:quick && npm run test:smoke",
+    "test:ci": "k6 run --quiet scenarios/quick-test.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "check-format": "prettier --check ."
+    "check-format": "prettier --check .",
+    "validate": "npm run check-format && npm run lint"
   },
   "devDependencies": {
     "@types/k6": "^1.5.0",

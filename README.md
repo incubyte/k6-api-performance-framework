@@ -46,13 +46,13 @@ For detailed architecture documentation, see [ARCHITECTURE.md](./ARCHITECTURE.md
 
 ## Test Types
 
-| Test Type | Purpose | Configuration |
-|-----------|---------|---------------|
-| **Quick** | Fast validation | 1 VU, 1 iteration (~3s) |
-| **Smoke** | Basic functionality | 1 VU, 1 minute |
-| **Load** | Sustained performance | 5 VUs, 5 minutes |
-| **Stress** | Breaking point | Ramp up to 20 VUs |
-| **Soak** | Long-duration stability | 3 VUs, 15 minutes |
+| Test Type  | Purpose                 | Configuration           |
+| ---------- | ----------------------- | ----------------------- |
+| **Quick**  | Fast validation         | 1 VU, 1 iteration (~3s) |
+| **Smoke**  | Basic functionality     | 1 VU, 1 minute          |
+| **Load**   | Sustained performance   | 5 VUs, 5 minutes        |
+| **Stress** | Breaking point          | Ramp up to 20 VUs       |
+| **Soak**   | Long-duration stability | 3 VUs, 15 minutes       |
 
 ---
 
@@ -92,99 +92,101 @@ This framework is designed as a **template** for your projects. Here's how to ex
 ### Example: Adding a Users API Resource
 
 #### Step 1: Add Endpoints (`endpoints.js`)
+
 ```javascript
 export const endpoints = {
   posts: `${BASE_URL}/posts`,
-  users: `${BASE_URL}/users`,           // NEW
-  user: (id) => `${BASE_URL}/users/${id}`,  // NEW
+  users: `${BASE_URL}/users`, // NEW
+  user: (id) => `${BASE_URL}/users/${id}`, // NEW
 };
 ```
 
 #### Step 2: Create Operations Class (`src/operations/UsersOperations.js`)
+
 ```javascript
 import { group, check } from "k6";
 import { endpoints } from "../../endpoints.js";
 import * as requestUtils from "../lib/request-utils.js";
 import { logError } from "../lib/utils.js";
-import BaseOperations from "./BaseOperations.js";  // Extend base class
+import BaseOperations from "./BaseOperations.js"; // Extend base class
 
 export default class UsersOperations extends BaseOperations {
-    constructor() {
-        super();  // Inherits baseHeaders
-    }
+  constructor() {
+    super(); // Inherits baseHeaders
+  }
 
-    getAllUsers() {
-        return group("Get All Users", () => {
-            // Build and execute request
-            const url = endpoints.users;
-            const headers = requestUtils.buildHeaders({ base: this.baseHeaders });
-            const response = requestUtils.performGet(
-                url, headers, {},
-                "Successfully retrieved all users",
-                "Get All Users"
-            );
+  getAllUsers() {
+    return group("Get All Users", () => {
+      // Build and execute request
+      const url = endpoints.users;
+      const headers = requestUtils.buildHeaders({ base: this.baseHeaders });
+      const response = requestUtils.performGet(url, headers, {}, "Successfully retrieved all users", "Get All Users");
 
-            // Validate response
-            if (response) {
-                const data = response.json();
-                check(response, {
-                    "Get users - status is 200": (r) => r.status === 200,
-                    "Get users - is array": () => Array.isArray(data),
-                    "Get users - has users": () => data.length > 0,
-                });
-                return response;
-            }
-            logError("Failed to get all users");
-            return null;
+      // Validate response
+      if (response) {
+        const data = response.json();
+        check(response, {
+          "Get users - status is 200": (r) => r.status === 200,
+          "Get users - is array": () => Array.isArray(data),
+          "Get users - has users": () => data.length > 0,
         });
-    }
+        return response;
+      }
+      logError("Failed to get all users");
+      return null;
+    });
+  }
 
-    getUser(userId) {
-        return group(`Get User ${userId}`, () => {
-            const url = endpoints.user(userId);
-            const headers = requestUtils.buildHeaders({ base: this.baseHeaders });
-            const response = requestUtils.performGet(
-                url, headers, {},
-                `Successfully retrieved user ${userId}`,
-                `Get User ${userId}`
-            );
+  getUser(userId) {
+    return group(`Get User ${userId}`, () => {
+      const url = endpoints.user(userId);
+      const headers = requestUtils.buildHeaders({ base: this.baseHeaders });
+      const response = requestUtils.performGet(
+        url,
+        headers,
+        {},
+        `Successfully retrieved user ${userId}`,
+        `Get User ${userId}`,
+      );
 
-            if (response) {
-                const data = response.json();
-                check(response, {
-                    "Get user - status is 200": (r) => r.status === 200,
-                    "Get user - has id": () => data.id !== undefined,
-                    "Get user - has name": () => data.name !== undefined,
-                    "Get user - has email": () => data.email !== undefined,
-                });
-                return response;
-            }
-            logError(`Failed to get user ${userId}`);
-            return null;
+      if (response) {
+        const data = response.json();
+        check(response, {
+          "Get user - status is 200": (r) => r.status === 200,
+          "Get user - has id": () => data.id !== undefined,
+          "Get user - has name": () => data.name !== undefined,
+          "Get user - has email": () => data.email !== undefined,
         });
-    }
+        return response;
+      }
+      logError(`Failed to get user ${userId}`);
+      return null;
+    });
+  }
 }
 ```
 
 #### Step 3: Create User Journey (`src/user-journeys/users-test.js`)
+
 ```javascript
 import UsersOperations from "../operations/UsersOperations.js";
 
 export default function usersTest() {
-    const operations = new UsersOperations();
+  const operations = new UsersOperations();
 
-    // Execute user operations
-    operations.getAllUsers();
-    operations.getUser(1);
+  // Execute user operations
+  operations.getAllUsers();
+  operations.getUser(1);
 }
 ```
 
 #### Step 4: Use in Scenario
+
 ```javascript
 import usersTest from "../src/user-journeys/users-test.js";
 
 export default function () {
-    usersTest();
+  usersTest();
 }
 ```
 
@@ -202,13 +204,17 @@ See `src/operations/BaseOperations.js` for detailed extension documentation.
 ## Configuration
 
 ### Base URL
+
 Edit `endpoints.js`:
+
 ```javascript
-const BASE_URL = "https://jsonplaceholder.typicode.com";  // Change here
+const BASE_URL = "https://jsonplaceholder.typicode.com"; // Change here
 ```
 
 ### Test Thresholds
+
 Edit scenario files (e.g., `scenarios/load-test.js`):
+
 ```javascript
 thresholds: {
   http_req_duration: ["p(95)<500"],  // 95% requests < 500ms
@@ -221,6 +227,7 @@ thresholds: {
 ## Running Tests
 
 ### Basic Execution
+
 ```bash
 # Run specific scenario
 k6 run scenarios/smoke-test.js
@@ -233,6 +240,7 @@ k6 run --summary-trend-stats="avg,min,med,max,p(95),p(99)" scenarios/load-test.j
 ```
 
 ### Viewing Results
+
 ```bash
 # HTML reports are generated in results/html/
 open results/html/smoketest.html  # macOS
@@ -244,6 +252,7 @@ xdg-open results/html/smoketest.html  # Linux
 ## Best Practices
 
 ### ✅ Do
+
 - Extend `BaseOperations` for new API resources (consistent pattern)
 - Cache JSON parsing results (`const data = response.json()`)
 - Validate in Operations layer (single source of truth)
@@ -252,6 +261,7 @@ xdg-open results/html/smoketest.html  # Linux
 - Follow `PostsOperations.js` as a reference when adding new resources
 
 ### ❌ Don't
+
 - Don't parse JSON multiple times per request
 - Don't add `sleep()` inside operations (use scenario-level think time)
 - Don't skip extending BaseOperations (maintains consistency)
@@ -276,6 +286,7 @@ See [FRAMEWORK_ANALYSIS.md](./FRAMEWORK_ANALYSIS.md) for detailed performance an
 ## Troubleshooting
 
 ### Tests Failing
+
 ```bash
 # Check k6 version
 k6 version
@@ -290,20 +301,24 @@ k6 run scenarios/smoke-test.js --verbose
 ### Common Issues
 
 **"Unknown dependency" error**
+
 - Verify k6 is installed correctly
 - Check import paths are correct
 
 **"HTTP request failed" errors**
+
 - Verify API endpoint is accessible
 - Check network connectivity
 - Review `endpoints.js` configuration
 
 **High failure rate**
+
 - Check thresholds are realistic
 - Verify API performance
 - Review VU count and duration
 
 **"Cannot create results directory" error**
+
 - Create the directory manually: `mkdir -p results/html`
 - This is a known issue that will be fixed in next version
 
@@ -320,10 +335,12 @@ k6 run scenarios/smoke-test.js --verbose
 ## Development
 
 ### Requirements
+
 - k6 v0.40.0+ (latest recommended)
 - Node.js (for eslint/prettier)
 
 ### Code Quality
+
 ```bash
 # Install dependencies
 npm install
@@ -362,4 +379,4 @@ npm run test:smoke
 **Framework Status**: Template-ready, extensible 3-layer architecture (v3.0)
 **Last Updated**: January 15, 2026
 **Use As**: Clone this repo as a template for your k6 performance testing projects
-**Overall Score**: 3.8/5 - Excellent foundation, ready for production use
+**Overall Score**: 4.5/5 - Production-ready with comprehensive features

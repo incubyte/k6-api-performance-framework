@@ -1,6 +1,3 @@
-import { group, check } from "k6";
-import * as requestUtils from "../lib/request-utils.js";
-import { logError } from "../lib/utils.js";
 import { config } from "../../config.js";
 
 /**
@@ -172,27 +169,27 @@ import { config } from "../../config.js";
  * @see PostsOperations.js for complete implementation example
  */
 export default class BaseOperations {
-    constructor() {
-        /**
-         * Base headers used for all API requests
-         * Uses config.apiKey which supports environment variable override
-         * Override in child class if different headers needed
-         */
-        this.baseHeaders = {
-            "x-api-key": config.apiKey,
-            "Content-Type": "application/json",
-        };
-    }
-
+  constructor() {
     /**
-     * Optional: Add common helper methods here
-     *
-     * Example helper methods you might add:
-     * - buildRequestHeaders() - Custom header building logic
-     * - validateStandardResponse() - Common validation patterns
-     * - handleAuthToken() - Token management for authenticated requests
-     * - retry() - Retry logic for failed requests
-     *
-     * Keep helpers minimal - only add if used by 3+ operation classes
+     * Base headers used for all API requests
+     * Uses config.apiKey which supports environment variable override
+     * Override in child class if different headers needed
      */
+    this.baseHeaders = {
+      "x-api-key": config.apiKey,
+      "Content-Type": "application/json",
+    };
+  }
+
+  /**
+   * Optional: Add common helper methods here
+   *
+   * Example helper methods you might add:
+   * - buildRequestHeaders() - Custom header building logic
+   * - validateStandardResponse() - Common validation patterns
+   * - handleAuthToken() - Token management for authenticated requests
+   * - retry() - Retry logic for failed requests
+   *
+   * Keep helpers minimal - only add if used by 3+ operation classes
+   */
 }

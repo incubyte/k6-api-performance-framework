@@ -5,15 +5,15 @@ import { createScenarioOptions, executorPresets } from "../src/config/scenario-b
 // Quick Test: Single iteration for fast validation
 // Use for: Smoke testing, quick checks, CI/CD pipelines
 export const options = createScenarioOptions("Quick Test", {
-    quick_test: executorPresets.quick,
+  quick_test: executorPresets.quick,
 });
 
 export default function () {
-    postsTest();
+  postsTest();
 }
 
 export function handleSummary(data) {
-    return {
-        "results/html/quick-test.html": htmlReport(data),
-    };
+  return {
+    "results/html/quick-test.html": htmlReport(data),
+  };
 }

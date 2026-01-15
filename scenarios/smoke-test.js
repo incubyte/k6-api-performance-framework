@@ -7,16 +7,16 @@ import { createScenarioOptions, executorPresets } from "../src/config/scenario-b
 // Smoke Test: Minimal load for basic validation
 // Use for: Basic functionality verification, pre-production checks
 export const options = createScenarioOptions("Smoke Test", {
-    smoke_test: executorPresets.smoke,
+  smoke_test: executorPresets.smoke,
 });
 
 export default function () {
-    postsTest();
-    sleep(randomIntBetween(1, 3)); // Think time between iterations
+  postsTest();
+  sleep(randomIntBetween(1, 3)); // Think time between iterations
 }
 
 export function handleSummary(data) {
-    return {
-        "results/html/smoketest.html": htmlReport(data),
-    };
+  return {
+    "results/html/smoketest.html": htmlReport(data),
+  };
 }
