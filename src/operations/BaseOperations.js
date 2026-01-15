@@ -1,6 +1,7 @@
 import { group, check } from "k6";
 import * as requestUtils from "../lib/request-utils.js";
 import { logError } from "../lib/utils.js";
+import { config } from "../../config.js";
 
 /**
  * BaseOperations - Foundation class for all API operations
@@ -74,16 +75,111 @@ import { logError } from "../lib/utils.js";
  * - baseHeaders: Common headers (API key, Content-Type) for all requests
  * - Extend constructor to add resource-specific configuration
  *
+ * ENVIRONMENT VARIABLE SUPPORT:
+ * - API key is read from config.js which supports environment variables
+ * - Override at runtime: k6 run -e API_KEY=your-key scenarios/smoke-test.js
+ *
+ * AUTHENTICATION PATTERNS:
+ * This class supports multiple authentication patterns. Choose the one that fits your API:
+ *
+ * Pattern 1: API Key Authentication (Current Implementation)
+ * - API key passed in custom header (x-api-key)
+ * - Configure via environment variable: -e API_KEY=your-key
+ *
+ * Pattern 2: Bearer Token Authentication
+ * @example
+ * constructor() {
+ *     super();
+ *     // Override in child class if you need bearer token auth
+ *     const token = config.apiKey; // or config.authToken
+ *     this.baseHeaders = {
+ *         "Authorization": `Bearer ${token}`,
+ *         "Content-Type": "application/json"
+ *     };
+ * }
+ *
+ * Pattern 3: Basic Authentication
+ * @example
+ * import encoding from 'k6/encoding';
+ *
+ * constructor() {
+ *     super();
+ *     const username = __ENV.API_USERNAME || "user";
+ *     const password = __ENV.API_PASSWORD || "pass";
+ *     const credentials = encoding.b64encode(`${username}:${password}`);
+ *     this.baseHeaders = {
+ *         "Authorization": `Basic ${credentials}`,
+ *         "Content-Type": "application/json"
+ *     };
+ * }
+ *
+ * Pattern 4: OAuth 2.0 / Dynamic Token
+ * @example
+ * constructor() {
+ *     super();
+ *     this.authToken = null;
+ * }
+ *
+ * authenticate() {
+ *     // Call auth endpoint to get token
+ *     const authResponse = http.post(
+ *         `${config.baseUrl}/oauth/token`,
+ *         JSON.stringify({
+ *             client_id: __ENV.CLIENT_ID,
+ *             client_secret: __ENV.CLIENT_SECRET,
+ *             grant_type: "client_credentials"
+ *         })
+ *     );
+ *     this.authToken = authResponse.json().access_token;
+ * }
+ *
+ * getAuthHeaders() {
+ *     if (!this.authToken) {
+ *         this.authenticate();
+ *     }
+ *     return {
+ *         "Authorization": `Bearer ${this.authToken}`,
+ *         "Content-Type": "application/json"
+ *     };
+ * }
+ *
+ * Pattern 5: Session Cookie Authentication
+ * @example
+ * constructor() {
+ *     super();
+ *     this.sessionCookie = null;
+ * }
+ *
+ * login() {
+ *     const loginResponse = http.post(
+ *         `${config.baseUrl}/login`,
+ *         JSON.stringify({
+ *             username: __ENV.USERNAME,
+ *             password: __ENV.PASSWORD
+ *         })
+ *     );
+ *     // Extract session cookie from response
+ *     this.sessionCookie = loginResponse.cookies.sessionId[0].value;
+ * }
+ *
+ * getAuthHeaders() {
+ *     return {
+ *         "Cookie": `sessionId=${this.sessionCookie}`,
+ *         "Content-Type": "application/json"
+ *     };
+ * }
+ *
  * @see PostsOperations.js for complete implementation example
  */
 export default class BaseOperations {
     constructor() {
         /**
          * Base headers used for all API requests
+         * Uses config.apiKey which supports environment variable override
          * Override in child class if different headers needed
          */
         this.baseHeaders = {
-            "x-api-key": "reqres-free-v1",
+            "x-api-key": config.apiKey,
             "Content-Type": "application/json",
         };
     }
@@ -95,6 +191,7 @@ export default class BaseOperations {
      * - buildRequestHeaders() - Custom header building logic
      * - validateStandardResponse() - Common validation patterns
      * - handleAuthToken() - Token management for authenticated requests
+     * - retry() - Retry logic for failed requests
      *
      * Keep helpers minimal - only add if used by 3+ operation classes
      */

@@ -1,8 +1,27 @@
+# k6 Test Reports
 summary.html
+results/html/*.html
+
+# Dependencies
 node_modules/
+
+# Analysis (too large for version control)
 FRAMEWORK_ANALYSIS.md
-results/
+
+# Environment files (contains secrets)
+.env
+.env.local
+.env.*.local
+
+# IDE & System Files
 .serena/
 .DS_Store
 **/.DS_Store
+.vscode/
+.idea/
+
+# Logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

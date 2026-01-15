@@ -3,6 +3,19 @@ import { endpoints } from "../../endpoints.js";
 import * as requestUtils from "../lib/request-utils.js";
 import { logError } from "../lib/utils.js";
 import BaseOperations from "./BaseOperations.js";
+import {
+    getAllPostsDuration,
+    getPostDuration,
+    createPostDuration,
+    updatePostDuration,
+    patchPostDuration,
+    deletePostDuration,
+    getPostCommentsDuration,
+    getPostsByUserDuration,
+    operationSuccess,
+    readOperations,
+    writeOperations,
+} from "../metrics/business-metrics.js";
 
 /**
  * PostsOperations - Orchestrates Posts API operations
@@ -24,6 +37,9 @@ export default class PostsOperations extends BaseOperations {
 
     getAllPosts() {
         return group("Get All Posts", () => {
+            // Track operation start time
+            const startTime = Date.now();
+
             // Build and execute request
             const url = endpoints.posts;
             const headers = requestUtils.buildHeaders({ base: this.baseHeaders });
@@ -35,16 +51,27 @@ export default class PostsOperations extends BaseOperations {
                 "Get All Posts"
             );
 
+            // Record operation duration
+            getAllPostsDuration.add(Date.now() - startTime);
+            readOperations.add(1);
+
             // Validate response
             if (response) {
                 const data = response.json();
-                check(response, {
+                const validations = check(response, {
                     "Get all posts - status is 200": (r) => r.status === 200,
                     "Get all posts - response is array": () => Array.isArray(data),
                     "Get all posts - has posts": () => data.length > 0,
                 });
+
+                // Record operation success
+                operationSuccess.add(response.status === 200);
+
                 return response;
             }
+
+            // Record operation failure
+            operationSuccess.add(false);
             logError("Failed to get all posts");
             return null;
         });
@@ -82,6 +109,9 @@ export default class PostsOperations extends BaseOperations {
 
     createPost(payload) {
         return group("Create Post", () => {
+            // Track operation start time
+            const startTime = Date.now();
+
             // Build and execute request
             const url = endpoints.posts;
             const headers = requestUtils.buildHeaders({ base: this.baseHeaders });
@@ -94,6 +124,10 @@ export default class PostsOperations extends BaseOperations {
                 "Create Post"
             );
 
+            // Record operation duration
+            createPostDuration.add(Date.now() - startTime);
+            writeOperations.add(1);
+
             // Validate response
             if (response) {
                 const data = response.json();
@@ -104,8 +138,15 @@ export default class PostsOperations extends BaseOperations {
                     "Create post - has body": () => data.body !== undefined,
                     "Create post - has userId": () => data.userId !== undefined,
                 });
+
+                // Record operation success
+                operationSuccess.add(response.status === 201);
+
                 return response;
             }
+
+            // Record operation failure
+            operationSuccess.add(false);
             logError("Failed to create post");
             return null;
         });
