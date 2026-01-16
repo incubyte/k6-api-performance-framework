@@ -8,7 +8,7 @@
     "url": "git+https://github.com/incubyte/k6-api-performance-framework.git"
   },
   "license": "ISC",
-  "author": "Kavya Kakarla",
+  "author": "Akash Shah",
   "main": "index.js",
   "keywords": [],
   "type": "module",
