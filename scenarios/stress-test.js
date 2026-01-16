@@ -1,23 +1,16 @@
-import userJourney from "../src/user-journeys/users-test.js";
+import postsTest from "../src/user-journeys/posts-test.js";
 import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";
+import { createScenarioOptions } from "../src/config/scenario-base.js";
 
-export const options = {
-  ext: {
-    loadimpact: {
-      projectID: 1,
-      name: "Stress Test",
-    },
-  },
-  report: {
-    directory: "./results/html",
-    fileName: "stress-test-report",
-  },
-  summaryTrendStats: ["avg", "min", "med", "max", "p(90)", "p(95)", "p(99)"],
-  summaryTimeUnit: "ms",
-  noColor: true,
-  scenarios: {
+// Stress Test: Ramping arrival rate to find breaking point
+// Use for: Capacity limits, scalability testing
+export const options = createScenarioOptions(
+  "Stress Test",
+  {
     stress_test: {
       executor: "ramping-arrival-rate",
+      startRate: 0,
+      timeUnit: "1s",
       preAllocatedVUs: 50,
       maxVUs: 100,
       stages: [
@@ -29,19 +22,20 @@ export const options = {
       ],
     },
   },
-  thresholds: {
+  {
+    // Custom thresholds for stress test
     http_req_duration: ["p(95)<500", "p(99)<1500"],
     http_req_failed: ["rate<0.05"], // Allow up to 5% error rate during stress
     http_reqs: ["rate>150"],
   },
-};
+);
 
 export default function () {
-  userJourney();
+  postsTest();
 }
 
 export function handleSummary(data) {
   return {
-    "results/html/stress-test.html": htmlReport(data),
+    "results/html/stresstest.html": htmlReport(data),
   };
 }

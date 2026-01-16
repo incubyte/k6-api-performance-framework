@@ -1,22 +1,29 @@
 import http from "k6/http";
-import { check } from "k6";
-import { logInfo, logError, logSuccess } from "./utils.js";
+import { logInfo, logSuccess, logError } from "./utils.js";
 
+/**
+ * Pure HTTP request wrapper without validation
+ * Validation responsibility belongs to the Steps layer
+ */
 export function performRequest(method, url, payload, headers, checks, successMsg, label) {
   logInfo(`Requesting ${label} at ${url}`);
+
   let res;
   if (method === "del") {
     res = http.del(url, null, { headers });
   } else {
-    res =
-      payload != null && method !== "get" ? http[method](url, payload, { headers }) : http[method](url, { headers });
+    // k6 HTTP module behavior: stringify payload if it's an object
+    const body = payload != null && typeof payload === "object" ? JSON.stringify(payload) : payload;
+    res = body != null && method !== "get" ? http[method](url, body, { headers }) : http[method](url, { headers });
   }
-  const passed = check(res, checks);
-  if (!passed) {
-    logError(`Failed ${label}: ${res.status}`);
-    return null;
+
+  // Log result (validation happens in Steps layer)
+  if (res && res.status >= 200 && res.status < 300) {
+    logSuccess(successMsg);
+  } else if (res) {
+    logError(`${label} returned status ${res.status}`);
   }
-  logSuccess(successMsg);
+
   return res;
 }
 
@@ -30,6 +37,10 @@ export function performPost(url, payload, headers, checks, successMsg, label) {
 
 export function performPut(url, payload, headers, checks, successMsg, label) {
   return performRequest("put", url, payload, headers, checks, successMsg, label);
+}
+
+export function performPatch(url, payload, headers, checks, successMsg, label) {
+  return performRequest("patch", url, payload, headers, checks, successMsg, label);
 }
 
 export function performDelete(url, headers, checks, successMsg, label) {

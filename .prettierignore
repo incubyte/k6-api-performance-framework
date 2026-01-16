@@ -1,0 +1,12 @@
+# Test results and reports
+results/
+summary.html
+
+# Dependencies
+node_modules/
+
+# Analysis documentation
+FRAMEWORK_ANALYSIS.md
+
+# Git
+.git/
