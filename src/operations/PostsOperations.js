@@ -218,12 +218,12 @@ export default class PostsOperations extends BaseOperations {
       // Build and execute request
       const url = endpoints.post(postId);
       const headers = requestUtils.buildHeaders({ base: this.baseHeaders });
-      const response = requestUtils.performPut(
+      const response = requestUtils.performPatch(
         url,
         patchPayload,
         headers,
         {},
-        `Successfully updated Patch Post ${postId}`,
+        `Successfully patched Patch Post ${postId}`,
         `Patch Post ${postId}`,
       );
 

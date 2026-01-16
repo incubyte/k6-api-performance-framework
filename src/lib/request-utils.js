@@ -39,6 +39,10 @@ export function performPut(url, payload, headers, checks, successMsg, label) {
   return performRequest("put", url, payload, headers, checks, successMsg, label);
 }
 
+export function performPatch(url, payload, headers, checks, successMsg, label) {
+  return performRequest("patch", url, payload, headers, checks, successMsg, label);
+}
+
 export function performDelete(url, headers, checks, successMsg, label) {
   logInfo(`Headers for delete request:`, headers);
   return performRequest("del", url, null, headers, checks, successMsg, label);
