@@ -870,7 +870,7 @@ Only add helpers that are:
 ## References
 
 - [k6 Documentation](https://k6.io/docs/)
-- [k6 Test Life Cycle](https://k6.io/docs/using-k6/test-life-cycle/)
+- [k6 Test Life Cycle](https://grafana.com/docs/k6/latest/using-k6/test-lifecycle/)
 - [k6 Metrics](https://k6.io/docs/using-k6/metrics/)
 - [k6 Checks](https://k6.io/docs/using-k6/checks/)
 - [k6 Thresholds](https://k6.io/docs/using-k6/thresholds/)
